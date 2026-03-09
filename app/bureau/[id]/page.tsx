@@ -1,17 +1,17 @@
 "use client"
 
 import { useEffect } from "react"
+import { useParams } from "next/navigation"
 import Sidebar from "@/components/Sidebar"
 import CandidateCard from "@/components/CandidateCard"
 import Ranking from "@/components/Ranking"
 import { useVoteStore } from "@/store/voteStore"
 import { supabase } from "@/lib/supabase"
-import { useSearchParams } from "next/navigation"
 
 export default function BureauPage(){
 
-  const searchParams = useSearchParams()
-  const bureauId = Number(searchParams.get("bureau") || 1)
+  const params = useParams()
+  const bureauId = Number(params.id)
 
   const {
     candidates,
@@ -25,7 +25,6 @@ export default function BureauPage(){
     setStats
   } = useVoteStore()
 
-  // ✅ calcul des taux
   const participation =
   registered > 0
   ? ((voters / registered) * 100).toFixed(2)
@@ -36,25 +35,24 @@ export default function BureauPage(){
   ? ((expressed / voters) * 100).toFixed(2)
   : "0"
 
-
   useEffect(()=>{
 
     async function loadData(){
 
       const { data: candidatesData } = await supabase
-      .from("candidates")
-      .select("*")
+        .from("candidates")
+        .select("*")
 
       const { data: votesData } = await supabase
-      .from("votes")
-      .select("*")
-      .eq("bureau_id",bureauId)
+        .from("votes")
+        .select("*")
+        .eq("bureau_id",bureauId)
 
       const { data: statsData } = await supabase
-      .from("bureau_results")
-      .select("*")
-      .eq("bureau_id",bureauId)
-      .single()
+        .from("bureau_results")
+        .select("*")
+        .eq("bureau_id",bureauId)
+        .single()
 
       if(statsData){
 
@@ -69,17 +67,26 @@ export default function BureauPage(){
 
       if(candidatesData){
 
+        const expressedVotes = statsData?.expressed || 0
+
         const formatted = candidatesData.map((c:any)=>{
 
           const vote = votesData?.find(
             (v:any)=>v.candidate_id === c.id
           )
 
-          return {
+          const votes = vote ? vote.votes : 0
+
+          const percent =
+expressedVotes > 0
+? (votes / expressedVotes) * 100
+: 0
+
+          return{
             id:c.id,
             name:c.name,
-            votes:vote ? vote.votes : 0,
-            percent:0
+            votes:votes,
+            percent
           }
 
         })
@@ -90,7 +97,9 @@ export default function BureauPage(){
 
     }
 
-    loadData()
+    if(bureauId){
+      loadData()
+    }
 
   },[bureauId])
 
@@ -100,12 +109,12 @@ export default function BureauPage(){
     updateVote(id,newVotes)
 
     await supabase
-    .from("votes")
-    .upsert({
-      bureau_id:bureauId,
-      candidate_id:id,
-      votes:newVotes
-    })
+      .from("votes")
+      .upsert({
+        bureau_id:bureauId,
+        candidate_id:id,
+        votes:newVotes
+      })
 
   }
 
@@ -119,7 +128,7 @@ export default function BureauPage(){
       <div className="flex-1 p-10">
 
         <h1 className="text-2xl font-bold mb-6">
-          Bureau de vote
+          Bureau {bureauId}
         </h1>
 
         <div className="grid grid-cols-5 gap-4 mb-8">

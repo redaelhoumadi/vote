@@ -6,3 +6,4 @@ export interface Candidate {
   percent: number
 
 }
+

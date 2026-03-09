@@ -1,16 +1,12 @@
 import { Candidate } from "@/types/candidate"
 
 interface Props{
-
   candidates:Candidate[]
-
 }
 
 export default function Ranking({candidates}:Props){
 
-  const sorted =
-  [...candidates]
-  .sort((a,b)=>b.votes-a.votes)
+  const sorted = [...candidates].sort((a,b)=>b.votes-a.votes)
 
   return(
 
@@ -20,24 +16,28 @@ export default function Ranking({candidates}:Props){
         Classement
       </h2>
 
-      {sorted.map((c,i)=>(
+      <div className="space-y-2">
 
-        <div
-        key={c.id}
-        className="flex justify-between py-2"
-        >
+        {sorted.map((c,i)=>(
 
-          <div>
-            {i+1}. {c.name}
+          <div
+            key={c.id}
+            className="flex justify-between border-b pb-2"
+          >
+
+            <div>
+              {i+1}. {c.name}
+            </div>
+
+            <div className="font-semibold">
+              {c.votes}
+            </div>
+
           </div>
 
-          <div>
-            {c.votes}
-          </div>
+        ))}
 
-        </div>
-
-      ))}
+      </div>
 
     </div>
 

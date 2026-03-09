@@ -54,7 +54,7 @@ export default function Sidebar(){
           {bureaux.map((b)=>(
             <Link
               key={b.id}
-              href={`/bureau?bureau=${b.id}`}
+              href={`/bureau/${b.id}`}
               className="text-sm hover:text-blue-300"
             >
               {b.name}
