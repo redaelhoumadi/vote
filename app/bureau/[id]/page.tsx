@@ -1,17 +1,18 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import Sidebar from "@/components/Sidebar"
 import { useVoteStore } from "@/store/voteStore"
 import { supabase } from "@/lib/supabase"
 import Clock from "@/components/Clock"
 
-
 export default function BureauPage(){
 
   const params = useParams()
   const bureauId = Number(params.id)
+
+  const [bureauName,setBureauName] = useState("")
 
   const {
     candidates,
@@ -25,13 +26,11 @@ export default function BureauPage(){
     setStats
   } = useVoteStore()
 
-  // ✅ taux de participation
   const participation =
   registered > 0
   ? ((voters / registered) * 100).toFixed(2)
   : "0"
 
-  // ✅ taux d'exprimés
   const expressedRate =
   voters > 0
   ? ((expressed / voters) * 100).toFixed(2)
@@ -59,14 +58,23 @@ export default function BureauPage(){
         return
       }
 
-      // 🔐 sécurité accès bureau
       if(userData.role !== "admin" && userData.bureau_id !== bureauId){
 
         alert("Accès interdit à ce bureau")
-
         window.location.href = `/bureau/${userData.bureau_id}`
         return
 
+      }
+
+      // charger nom bureau
+      const { data:bureauData } = await supabase
+        .from("bureaux")
+        .select("*")
+        .eq("id",bureauId)
+        .single()
+
+      if(bureauData){
+        setBureauName(bureauData.name)
       }
 
       const { data: candidatesData } = await supabase
@@ -115,6 +123,7 @@ export default function BureauPage(){
           return{
             id:c.id,
             name:c.name,
+            photo:c.photo,
             votes:votes,
             percent
           }
@@ -161,18 +170,16 @@ export default function BureauPage(){
 
   <div className="flex-1 p-8">
 
-    {/* HEADER */}
     <div className="flex justify-between items-center mb-6">
 
-  <h1 className="text-2xl font-bold">
-    Bureau de vote : {bureauId}
-  </h1>
+      <h1 className="text-2xl font-bold p-6 bg-white rounded-xl shadow p-4 text-center">
+        Bureau — {bureauName || "Chargement..."}
+      </h1>
 
-  <Clock/>
+      <Clock/>
 
-</div>
+    </div>
 
-    {/* STATS */}
     <div className="grid grid-cols-7 gap-4 mb-8">
 
       <div className="bg-white rounded-xl shadow p-4 text-center">
@@ -226,10 +233,8 @@ export default function BureauPage(){
 
     </div>
 
-    {/* GRID PRINCIPAL */}
     <div className="grid grid-cols-4 gap-6">
 
-      {/* CANDIDATS */}
       <div className="col-span-3 grid grid-cols-4 gap-6">
 
         {candidates.map(c=>(
@@ -280,7 +285,6 @@ export default function BureauPage(){
 
       </div>
 
-      {/* CLASSEMENT */}
       <div className="bg-white rounded-xl shadow p-6">
 
         <h2 className="text-xl font-bold mb-4">
