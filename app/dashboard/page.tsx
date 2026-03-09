@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Sidebar from "@/components/Sidebar"
 import { supabase } from "@/lib/supabase"
 
-export default function Dashboard(){
+export default function DashboardPage(){
 
   const [results,setResults] = useState<any>({})
 
@@ -11,7 +12,7 @@ export default function Dashboard(){
 
     async function load(){
 
-      const { data } = await supabase
+      const {data} = await supabase
         .from("votes")
         .select(`
           votes,
@@ -37,40 +38,40 @@ export default function Dashboard(){
 
     load()
 
-    const interval = setInterval(load,2000)
-
-    return ()=>clearInterval(interval)
-
   },[])
 
   return(
 
-    <div className="p-10">
+    <div className="flex">
 
-      <h1 className="text-2xl font-bold mb-8">
-        Dashboard Élections
-      </h1>
+      <Sidebar/>
 
-      <div className="grid grid-cols-4 gap-6">
+      <div className="flex-1 p-10">
 
-        {Object.entries(results).map(([name,votes])=>(
-          
-          <div
-          key={name}
-          className="bg-white p-6 rounded-xl shadow"
-          >
+        <h1 className="text-2xl font-bold mb-6">
+          Dashboard Élections
+        </h1>
 
-            <div className="font-semibold">
-              {name}
+        <div className="bg-white p-6 rounded-xl shadow">
+
+          {Object.entries(results).map(([name,votes])=>(
+            <div
+              key={name}
+              className="flex justify-between border-b py-2"
+            >
+
+              <div>
+                {name}
+              </div>
+
+              <div className="font-semibold">
+                {votes as number}
+              </div>
+
             </div>
+          ))}
 
-            <div className="text-xl mt-2">
-              {votes as number}
-            </div>
-
-          </div>
-
-        ))}
+        </div>
 
       </div>
 

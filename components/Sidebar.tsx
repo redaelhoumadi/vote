@@ -7,23 +7,53 @@ import { supabase } from "@/lib/supabase"
 export default function Sidebar(){
 
   const [bureaux,setBureaux] = useState<any[]>([])
+  const [role,setRole] = useState<string | null>(null)
 
   useEffect(()=>{
 
-    async function loadBureaux(){
+    async function loadUser(){
 
-      const { data } = await supabase
-        .from("bureaux")
+      const { data:{user} } = await supabase.auth.getUser()
+
+      if(!user) return
+
+      const { data:userData } = await supabase
+        .from("users")
         .select("*")
-        .order("id")
+        .eq("id",user.id)
+        .single()
 
-      if(data){
-        setBureaux(data)
+      if(!userData) return
+
+      setRole(userData.role)
+
+      // ADMIN → tous les bureaux
+      if(userData.role === "admin"){
+
+        const { data } = await supabase
+          .from("bureaux")
+          .select("*")
+          .order("id")
+
+        if(data) setBureaux(data)
+
+      }
+
+      // AGENT → seulement son bureau
+      else{
+
+        const { data } = await supabase
+          .from("bureaux")
+          .select("*")
+          .eq("id",userData.bureau_id)
+
+        if(data) setBureaux(data)
+
       }
 
     }
 
-    loadBureaux()
+    loadUser()
 
   },[])
 
@@ -35,13 +65,13 @@ export default function Sidebar(){
         Evreux Vote
       </h2>
 
-      <div className="flex flex-col gap-4 mb-8">
-
-        <Link href="/dashboard">
-          Dashboard
-        </Link>
-
-      </div>
+      {role === "admin" && (
+        <div className="flex flex-col gap-4 mb-8">
+          <Link href="/dashboard">
+            Dashboard
+          </Link>
+        </div>
+      )}
 
       <div>
 
