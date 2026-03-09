@@ -6,73 +6,109 @@ import CandidateCard from "@/components/CandidateCard"
 import Ranking from "@/components/Ranking"
 import { useVoteStore } from "@/store/voteStore"
 import { supabase } from "@/lib/supabase"
+import { useSearchParams } from "next/navigation"
 
 export default function BureauPage(){
 
-  const {
+  const searchParams = useSearchParams()
+  const bureauId = Number(searchParams.get("bureau") || 1)
 
+  const {
     candidates,
     setCandidates,
     updateVote,
-
     registered,
     voters,
     blank,
     nullVotes,
     expressed,
-
     setStats
-
   } = useVoteStore()
 
-useEffect(()=>{
+  // ✅ calcul des taux
+  const participation =
+  registered > 0
+  ? ((voters / registered) * 100).toFixed(2)
+  : "0"
 
-async function loadVotes(){
+  const expressedRate =
+  voters > 0
+  ? ((expressed / voters) * 100).toFixed(2)
+  : "0"
 
-const {data} = await supabase
 
-.from("votes")
+  useEffect(()=>{
 
-.select("*")
+    async function loadData(){
 
-.eq("bureau_id",101)
+      const { data: candidatesData } = await supabase
+      .from("candidates")
+      .select("*")
 
-const candidates = [
+      const { data: votesData } = await supabase
+      .from("votes")
+      .select("*")
+      .eq("bureau_id",bureauId)
 
-{ id:1,name:"Samuel Brigantino",votes:0,percent:0 },
-{ id:2,name:"Guy Lefrand",votes:0,percent:0 },
-{ id:3,name:"Eugénie Petitjean",votes:0,percent:0 },
-{ id:4,name:"Jean Messiha",votes:0,percent:0 },
-{ id:5,name:"Mélanie Peyraud",votes:0,percent:0 },
-{ id:6,name:"Gérard Silighini",votes:0,percent:0 },
-{ id:7,name:"Nathalie Chartier",votes:0,percent:0 },
-{ id:8,name:"Michel Champredon",votes:0,percent:0 }
+      const { data: statsData } = await supabase
+      .from("bureau_results")
+      .select("*")
+      .eq("bureau_id",bureauId)
+      .single()
 
-]
+      if(statsData){
 
-if(data){
+        setStats({
+          registered:statsData.registered,
+          voters:statsData.voters,
+          blank:statsData.blank,
+          nullVotes:statsData.null_votes
+        })
 
-data.forEach(v=>{
+      }
 
-const c = candidates.find(x=>x.id===v.candidate_id)
+      if(candidatesData){
 
-if(c){
+        const formatted = candidatesData.map((c:any)=>{
 
-c.votes = v.votes
+          const vote = votesData?.find(
+            (v:any)=>v.candidate_id === c.id
+          )
 
-}
+          return {
+            id:c.id,
+            name:c.name,
+            votes:vote ? vote.votes : 0,
+            percent:0
+          }
 
-})
+        })
 
-}
+        setCandidates(formatted)
 
-setCandidates(candidates)
+      }
 
-}
+    }
 
-loadVotes()
+    loadData()
 
-},[])
+  },[bureauId])
+
+
+  async function handleVote(id:number,newVotes:number){
+
+    updateVote(id,newVotes)
+
+    await supabase
+    .from("votes")
+    .upsert({
+      bureau_id:bureauId,
+      candidate_id:id,
+      votes:newVotes
+    })
+
+  }
+
 
   return(
 
@@ -86,74 +122,32 @@ loadVotes()
           Bureau de vote
         </h1>
 
-        {/* stats */}
-
         <div className="grid grid-cols-5 gap-4 mb-8">
 
-          <input
-          type="number"
-          placeholder="Inscrits"
-          className="border p-2 rounded"
-          value={registered}
-          onChange={e=>
-            setStats({
-              registered:+e.target.value,
-              voters,
-              blank,
-              nullVotes
-            })
-          }
-          />
+          <div className="bg-white p-4 rounded shadow">
+            Inscrits : {registered}
+          </div>
 
-          <input
-          type="number"
-          placeholder="Votants"
-          className="border p-2 rounded"
-          value={voters}
-          onChange={e=>
-            setStats({
-              registered,
-              voters:+e.target.value,
-              blank,
-              nullVotes
-            })
-          }
-          />
+          <div className="bg-white p-4 rounded shadow">
+            Votants : {voters}
+            <div className="text-sm text-gray-500">
+              {participation} %
+            </div>
+          </div>
 
-          <input
-          type="number"
-          placeholder="Blancs"
-          className="border p-2 rounded"
-          value={blank}
-          onChange={e=>
-            setStats({
-              registered,
-              voters,
-              blank:+e.target.value,
-              nullVotes
-            })
-          }
-          />
+          <div className="bg-white p-4 rounded shadow">
+            Blancs : {blank}
+          </div>
 
-          <input
-          type="number"
-          placeholder="Nuls"
-          className="border p-2 rounded"
-          value={nullVotes}
-          onChange={e=>
-            setStats({
-              registered,
-              voters,
-              blank,
-              nullVotes:+e.target.value
-            })
-          }
-          />
+          <div className="bg-white p-4 rounded shadow">
+            Nuls : {nullVotes}
+          </div>
 
-          <div className="bg-white p-2 rounded shadow">
-
+          <div className="bg-white p-4 rounded shadow">
             Exprimés : {expressed}
-
+            <div className="text-sm text-gray-500">
+              {expressedRate} %
+            </div>
           </div>
 
         </div>
@@ -163,23 +157,12 @@ loadVotes()
           <div className="col-span-3 grid grid-cols-4 gap-6">
 
             {candidates.map(c=>(
-
               <CandidateCard
-
                 key={c.id}
-
                 {...c}
-
-                onAdd={()=>
-                  updateVote(c.id,c.votes+1)
-                }
-
-                onRemove={()=>
-                  updateVote(c.id,Math.max(0,c.votes-1))
-                }
-
+                onAdd={()=>handleVote(c.id,c.votes+1)}
+                onRemove={()=>handleVote(c.id,Math.max(0,c.votes-1))}
               />
-
             ))}
 
           </div>
