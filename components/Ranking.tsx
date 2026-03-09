@@ -13,7 +13,7 @@ export default function Ranking({candidates}:Props){
     <div className="bg-white p-6 rounded-xl shadow">
 
       <h2 className="font-bold mb-4">
-        Classement
+       🏆 Classement
       </h2>
 
       <div className="space-y-2">

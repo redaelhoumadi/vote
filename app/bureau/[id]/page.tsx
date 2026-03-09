@@ -3,10 +3,10 @@
 import { useEffect } from "react"
 import { useParams } from "next/navigation"
 import Sidebar from "@/components/Sidebar"
-import CandidateCard from "@/components/CandidateCard"
-import Ranking from "@/components/Ranking"
 import { useVoteStore } from "@/store/voteStore"
 import { supabase } from "@/lib/supabase"
+import Clock from "@/components/Clock"
+
 
 export default function BureauPage(){
 
@@ -25,29 +25,27 @@ export default function BureauPage(){
     setStats
   } = useVoteStore()
 
+  // ✅ taux de participation
   const participation =
   registered > 0
   ? ((voters / registered) * 100).toFixed(2)
   : "0"
 
+  // ✅ taux d'exprimés
   const expressedRate =
   voters > 0
   ? ((expressed / voters) * 100).toFixed(2)
   : "0"
 
-
   useEffect(()=>{
 
     async function loadData(){
 
-      // 🔐 vérifier utilisateur connecté
       const { data:{user} } = await supabase.auth.getUser()
 
       if(!user){
-
         window.location.href = "/login"
         return
-
       }
 
       const { data:userData } = await supabase
@@ -57,10 +55,8 @@ export default function BureauPage(){
         .single()
 
       if(!userData){
-
         window.location.href = "/login"
         return
-
       }
 
       // 🔐 sécurité accès bureau
@@ -73,18 +69,15 @@ export default function BureauPage(){
 
       }
 
-      // charger candidats
       const { data: candidatesData } = await supabase
         .from("candidates")
         .select("*")
 
-      // charger votes
       const { data: votesData } = await supabase
         .from("votes")
         .select("*")
         .eq("bureau_id",bureauId)
 
-      // charger stats bureau
       const { data: statsData } = await supabase
         .from("bureau_results")
         .select("*")
@@ -143,90 +136,186 @@ export default function BureauPage(){
 
   async function handleVote(id:number,newVotes:number){
 
-  updateVote(id,newVotes)
+    updateVote(id,newVotes)
 
-  const { error } = await supabase
-    .from("votes")
-    .upsert({
-      bureau_id: bureauId,
-      candidate_id: id,
-      votes: newVotes
-    },{ onConflict: "bureau_id,candidate_id" })
+    const { error } = await supabase
+      .from("votes")
+      .upsert({
+        bureau_id: bureauId,
+        candidate_id: id,
+        votes: newVotes
+      },{ onConflict: "bureau_id,candidate_id" })
 
-  if(error){
-    console.error("Erreur sauvegarde vote:", error)
-    alert("Erreur sauvegarde vote")
+    if(error){
+      console.error("Erreur sauvegarde vote:", error)
+      alert("Erreur sauvegarde vote")
+    }
+
   }
-
-}
-
 
   return(
 
-    <div className="flex">
+<div className="flex bg-gray-100 min-h-screen">
 
-      <Sidebar/>
+  <Sidebar/>
 
-      <div className="flex-1 p-10">
+  <div className="flex-1 p-8">
 
-        <h1 className="text-2xl font-bold mb-6">
-          Bureau {bureauId}
-        </h1>
+    {/* HEADER */}
+    <div className="flex justify-between items-center mb-6">
 
-        <div className="grid grid-cols-5 gap-4 mb-8">
+  <h1 className="text-2xl font-bold">
+    Bureau de vote : {bureauId}
+  </h1>
 
-          <div className="bg-white p-4 rounded shadow">
-            Inscrits : {registered}
-          </div>
+  <Clock/>
 
-          <div className="bg-white p-4 rounded shadow">
-            Votants : {voters}
-            <div className="text-sm text-gray-500">
-              {participation} %
-            </div>
-          </div>
+</div>
 
-          <div className="bg-white p-4 rounded shadow">
-            Blancs : {blank}
-          </div>
+    {/* STATS */}
+    <div className="grid grid-cols-7 gap-4 mb-8">
 
-          <div className="bg-white p-4 rounded shadow">
-            Nuls : {nullVotes}
-          </div>
-
-          <div className="bg-white p-4 rounded shadow">
-            Exprimés : {expressed}
-            <div className="text-sm text-gray-500">
-              {expressedRate} %
-            </div>
-          </div>
-
+      <div className="bg-white rounded-xl shadow p-4 text-center">
+        <div className="text-gray-500 text-sm">Inscrits</div>
+        <div className="text-2xl font-bold text-blue-600">
+          {registered}
         </div>
+      </div>
 
-        <div className="grid grid-cols-4 gap-6">
+      <div className="bg-white rounded-xl shadow p-4 text-center">
+        <div className="text-gray-500 text-sm">Votants</div>
+        <div className="text-2xl font-bold text-yellow-500">
+          {voters}
+        </div>
+      </div>
 
-          <div className="col-span-3 grid grid-cols-4 gap-6">
+      <div className="bg-white rounded-xl shadow p-4 text-center">
+        <div className="text-gray-500 text-sm">Blancs</div>
+        <div className="text-2xl font-bold">
+          {blank}
+        </div>
+      </div>
 
-            {candidates.map(c=>(
-              <CandidateCard
-  key={c.id}
-  {...c}
-  onAdd={()=>handleVote(c.id,c.votes+1)}
-  onRemove={()=>handleVote(c.id,Math.max(0,c.votes-1))}
-  onSave={(value)=>handleVote(c.id,value)}
-/>
-            ))}
+      <div className="bg-white rounded-xl shadow p-4 text-center">
+        <div className="text-gray-500 text-sm">Nuls</div>
+        <div className="text-2xl font-bold text-red-500">
+          {nullVotes}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow p-4 text-center">
+        <div className="text-gray-500 text-sm">Exprimés</div>
+        <div className="text-2xl font-bold text-green-500">
+          {expressed}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow p-4 text-center">
+        <div className="text-gray-500 text-sm">Taux de vote</div>
+        <div className="text-2xl font-bold text-orange-500">
+          {participation}%
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow p-4 text-center">
+        <div className="text-gray-500 text-sm">Taux d'exprimés</div>
+        <div className="text-2xl font-bold text-teal-500">
+          {expressedRate}%
+        </div>
+      </div>
+
+    </div>
+
+    {/* GRID PRINCIPAL */}
+    <div className="grid grid-cols-4 gap-6">
+
+      {/* CANDIDATS */}
+      <div className="col-span-3 grid grid-cols-4 gap-6">
+
+        {candidates.map(c=>(
+
+          <div
+            key={c.id}
+            className="bg-white rounded-xl shadow p-6 text-center"
+          >
+
+            <img
+              src={c.photo || "/candidate.png"}
+              className="w-20 h-20 rounded-full mx-auto mb-4 object-cover"
+            />
+
+            <h3 className="font-semibold mb-3">
+              {c.name}
+            </h3>
+
+            <div className="flex items-center justify-center gap-3 mb-3">
+
+              <button
+                onClick={()=>handleVote(c.id,Math.max(0,c.votes-1))}
+                className="text-red-500 text-xl bg-red-100 p-1 rounded-sm cursor-pointer px-2"
+              >
+                -
+              </button>
+
+              <div className="bg-gray-100 px-4 py-1 rounded font-black">
+                {c.votes}
+              </div>
+
+              <button
+                onClick={()=>handleVote(c.id,c.votes+1)}
+                className="text-green-500 text-xl bg-green-100 p-1 rounded-sm cursor-pointer px-2"
+              >
+                +
+              </button>
+
+            </div>
+
+            <div className="text-lg font-bold text-blue-800 bg-blue-100 rounded-sm mx-8">
+              {c.percent.toFixed(2)} %
+            </div>
 
           </div>
 
-          <Ranking candidates={candidates}/>
+        ))}
 
-        </div>
+      </div>
+
+      {/* CLASSEMENT */}
+      <div className="bg-white rounded-xl shadow p-6">
+
+        <h2 className="text-xl font-bold mb-4">
+         🏆 Classement
+        </h2>
+
+        {[...candidates]
+        .sort((a,b)=>b.votes-a.votes)
+        .map((c,i)=>(
+
+          <div
+            key={c.id}
+            className="flex justify-between border-b border-gray-100 py-5"
+          >
+
+            <div>
+              {i+1} - {c.name}
+            </div>
+
+            <div className="font-bold">
+              {c.votes} Votes
+            </div>
+
+          </div>
+
+        ))}
 
       </div>
 
     </div>
 
-  )
+  </div>
+
+</div>
+
+)
 
 }

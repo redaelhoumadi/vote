@@ -69,35 +69,35 @@ export default function Sidebar(){
 
   return(
 
-    <div className="w-64 bg-blue-900 text-white min-h-screen p-6 flex flex-col justify-between">
+    <div className="w-64 bg-blue-900 text-white min-h-screen flex flex-col justify-between">
 
-      <div>
+      <div className="p-1">
 
-        <h2 className="text-xl font-bold mb-8">
-          Evreux Vote
+        <h2 className="text-xl font-bold mb-4 p-4">
+          Evreux en mouvement
         </h2>
 
         {role === "admin" && (
-          <div className="flex flex-col gap-4 mb-8">
-            <Link href="/dashboard">
-              Dashboard
+          <div className="flex flex-col gap-4 p-2">
+            <Link href="/dashboard" className="text-lg hover:bg-blue-600 hover:rounded-sm">
+              📊 Dashboard
             </Link>
           </div>
         )}
 
-        <div>
+        <div className="p-2">
 
-          <h3 className="text-sm text-blue-200 mb-4">
-            Bureaux
-          </h3>
+          <h2 className="text-lg mb-4">
+            🗳️ Bureaux
+          </h2>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1">
 
             {bureaux.map((b)=>(
               <Link
                 key={b.id}
                 href={`/bureau/${b.id}`}
-                className="text-sm hover:text-blue-300"
+                className="text-xs hover:text-blue-100 lowercase hover:bg-blue-600 p-1 hover:rounded-sm"
               >
                 {b.name}
               </Link>
@@ -114,7 +114,7 @@ export default function Sidebar(){
 
       <button
         onClick={handleLogout}
-        className="mt-8 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded cursor-pointer"
+        className="mt-4 bg-red-500 hover:bg-red-600 text-white py-2 px-4 cursor-pointer"
       >
         Déconnexion
       </button>
