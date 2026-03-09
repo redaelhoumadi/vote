@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 
 export default function LoginPage(){
@@ -10,72 +10,93 @@ export default function LoginPage(){
   const [loading,setLoading] = useState(false)
   const [error,setError] = useState("")
 
+  // ✅ vérifier si déjà connecté
+  useEffect(()=>{
+
+    async function checkSession(){
+
+      const { data } = await supabase.auth.getSession()
+
+      const session = data.session
+
+      if(!session) return
+
+      const user = session.user
+
+      const { data:userData } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id",user.id)
+        .single()
+
+      if(!userData) return
+
+      if(userData.role === "admin"){
+        window.location.href = "/dashboard"
+        return
+      }
+
+      if(userData.bureau_id){
+        window.location.href = `/bureau/${userData.bureau_id}`
+        return
+      }
+
+    }
+
+    checkSession()
+
+  },[])
+
+
+  // ✅ fonction login
   async function handleLogin(e:React.FormEvent){
 
     e.preventDefault()
     setLoading(true)
     setError("")
 
-    try{
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    })
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      })
-
-      if(error){
-        setError(error.message)
-        setLoading(false)
-        return
-      }
-
-      const user = data.user
-
-      if(!user){
-        setError("Utilisateur non trouvé")
-        setLoading(false)
-        return
-      }
-
-      const { data:userData, error:userError } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id",user.id)
-        .single()
-
-      if(userError){
-        setError(userError.message)
-        setLoading(false)
-        return
-      }
-
-      if(!userData){
-        setError("Utilisateur non associé")
-        setLoading(false)
-        return
-      }
-
-      // attendre que la session soit enregistrée
-      setTimeout(()=>{
-
-        if(userData.role === "admin"){
-          window.location.href = "/dashboard"
-          return
-        }
-
-        if(userData.bureau_id){
-          window.location.href = `/bureau/${userData.bureau_id}`
-          return
-        }
-
-      },200)
-
-    }catch(err:any){
-
-      setError("Erreur de connexion")
+    if(error){
+      setError(error.message)
       setLoading(false)
-
+      return
     }
+
+    const user = data.user
+
+    if(!user){
+      setError("Utilisateur non trouvé")
+      setLoading(false)
+      return
+    }
+
+    const { data:userData } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id",user.id)
+      .single()
+
+    if(!userData){
+      setError("Utilisateur non associé")
+      setLoading(false)
+      return
+    }
+
+    if(userData.role === "admin"){
+      window.location.href = "/dashboard"
+      return
+    }
+
+    if(userData.bureau_id){
+      window.location.href = `/bureau/${userData.bureau_id}`
+      return
+    }
+
+    setLoading(false)
 
   }
 

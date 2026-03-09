@@ -57,43 +57,67 @@ export default function Sidebar(){
 
   },[])
 
+
+  async function handleLogout(){
+
+    await supabase.auth.signOut()
+
+    window.location.href = "/login"
+
+  }
+
+
   return(
 
-    <div className="w-64 bg-blue-900 text-white min-h-screen p-6 overflow-y-auto">
-
-      <h2 className="text-xl font-bold mb-8">
-        Evreux Vote
-      </h2>
-
-      {role === "admin" && (
-        <div className="flex flex-col gap-4 mb-8">
-          <Link href="/dashboard">
-            Dashboard
-          </Link>
-        </div>
-      )}
+    <div className="w-64 bg-blue-900 text-white min-h-screen p-6 flex flex-col justify-between">
 
       <div>
 
-        <h3 className="text-sm text-blue-200 mb-4">
-          Bureaux
-        </h3>
+        <h2 className="text-xl font-bold mb-8">
+          Evreux Vote
+        </h2>
 
-        <div className="flex flex-col gap-2">
-
-          {bureaux.map((b)=>(
-            <Link
-              key={b.id}
-              href={`/bureau/${b.id}`}
-              className="text-sm hover:text-blue-300"
-            >
-              {b.name}
+        {role === "admin" && (
+          <div className="flex flex-col gap-4 mb-8">
+            <Link href="/dashboard">
+              Dashboard
             </Link>
-          ))}
+          </div>
+        )}
+
+        <div>
+
+          <h3 className="text-sm text-blue-200 mb-4">
+            Bureaux
+          </h3>
+
+          <div className="flex flex-col gap-2">
+
+            {bureaux.map((b)=>(
+              <Link
+                key={b.id}
+                href={`/bureau/${b.id}`}
+                className="text-sm hover:text-blue-300"
+              >
+                {b.name}
+              </Link>
+            ))}
+
+          </div>
 
         </div>
 
       </div>
+
+
+      {/* bouton logout */}
+
+      <button
+        onClick={handleLogout}
+        className="mt-8 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded cursor-pointer"
+      >
+        Déconnexion
+      </button>
 
     </div>
 

@@ -12,6 +12,38 @@ export default function DashboardPage(){
 
     async function load(){
 
+      // 🔐 vérifier utilisateur connecté
+      const { data:{user} } = await supabase.auth.getUser()
+
+      if(!user){
+
+        window.location.href = "/login"
+        return
+
+      }
+
+      const { data:userData } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id",user.id)
+        .single()
+
+      if(!userData){
+
+        window.location.href = "/login"
+        return
+
+      }
+
+      // 🔐 seuls les admins peuvent accéder au dashboard
+      if(userData.role !== "admin"){
+
+        window.location.href = `/bureau/${userData.bureau_id}`
+        return
+
+      }
+
+      // charger les résultats
       const {data} = await supabase
         .from("votes")
         .select(`

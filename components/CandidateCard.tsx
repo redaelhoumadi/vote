@@ -1,62 +1,75 @@
 "use client"
 
-interface Props{
+import { useState, useEffect } from "react"
 
+interface Props{
   id:number
   name:string
   votes:number
   percent:number
-
   onAdd:()=>void
   onRemove:()=>void
-
+  onSave:(value:number)=>void
 }
 
 export default function CandidateCard({
-
   name,
   votes,
   percent,
   onAdd,
-  onRemove
-
+  onRemove,
+  onSave
 }:Props){
+
+  const [value,setValue] = useState(votes)
+
+  useEffect(()=>{
+    setValue(votes)
+  },[votes])
 
   return(
 
-    <div className="bg-white rounded-xl p-6 shadow flex flex-col items-center gap-3">
+    <div className="bg-white p-4 rounded-xl shadow">
 
-      <div className="font-semibold text-center">
+      <h3 className="font-semibold mb-2">
         {name}
+      </h3>
+
+      <div className="text-sm text-gray-500 mb-4">
+        {percent.toFixed(2)} %
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 mb-3">
 
         <button
-        onClick={onRemove}
-        className="text-red-500 text-xl"
+          onClick={onRemove}
+          className="bg-gray-200 px-3 py-1 rounded"
         >
           -
         </button>
 
-        <div className="bg-gray-100 px-4 py-1 rounded">
-          {votes}
-        </div>
+        <input
+          type="number"
+          value={value}
+          onChange={(e)=>setValue(Number(e.target.value))}
+          className="w-20 border rounded text-center"
+        />
 
         <button
-        onClick={onAdd}
-        className="text-green-500 text-xl"
+          onClick={onAdd}
+          className="bg-gray-200 px-3 py-1 rounded"
         >
           +
         </button>
 
       </div>
 
-      <div className="text-lg font-bold">
-
-        {percent.toFixed(2)} %
-
-      </div>
+      <button
+        onClick={()=>onSave(value)}
+        className="w-full bg-blue-600 text-white py-1 rounded"
+      >
+        Enregistrer
+      </button>
 
     </div>
 

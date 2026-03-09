@@ -35,113 +35,130 @@ export default function BureauPage(){
   ? ((expressed / voters) * 100).toFixed(2)
   : "0"
 
+
   useEffect(()=>{
 
-  async function loadData(){
+    async function loadData(){
 
-    // récupérer utilisateur connecté
-    const { data:{user} } = await supabase.auth.getUser()
+      // 🔐 vérifier utilisateur connecté
+      const { data:{user} } = await supabase.auth.getUser()
 
-    if(!user) return
+      if(!user){
 
-    const { data:userData } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id",user.id)
-      .single()
+        window.location.href = "/login"
+        return
 
-    if(!userData) return
+      }
 
-    // 🔐 sécurité accès bureau
-    if(userData.role !== "admin" && userData.bureau_id !== bureauId){
+      const { data:userData } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id",user.id)
+        .single()
 
-      alert("Accès interdit à ce bureau")
-      window.location.href = `/bureau/${userData.bureau_id}`
-      return
+      if(!userData){
+
+        window.location.href = "/login"
+        return
+
+      }
+
+      // 🔐 sécurité accès bureau
+      if(userData.role !== "admin" && userData.bureau_id !== bureauId){
+
+        alert("Accès interdit à ce bureau")
+
+        window.location.href = `/bureau/${userData.bureau_id}`
+        return
+
+      }
+
+      // charger candidats
+      const { data: candidatesData } = await supabase
+        .from("candidates")
+        .select("*")
+
+      // charger votes
+      const { data: votesData } = await supabase
+        .from("votes")
+        .select("*")
+        .eq("bureau_id",bureauId)
+
+      // charger stats bureau
+      const { data: statsData } = await supabase
+        .from("bureau_results")
+        .select("*")
+        .eq("bureau_id",bureauId)
+        .single()
+
+      if(statsData){
+
+        setStats({
+          registered:statsData.registered,
+          voters:statsData.voters,
+          blank:statsData.blank,
+          nullVotes:statsData.null_votes
+        })
+
+      }
+
+      if(candidatesData){
+
+        const expressedVotes = statsData?.expressed || 0
+
+        const formatted = candidatesData.map((c:any)=>{
+
+          const vote = votesData?.find(
+            (v:any)=>v.candidate_id === c.id
+          )
+
+          const votes = vote ? vote.votes : 0
+
+          const percent =
+          expressedVotes > 0
+          ? (votes / expressedVotes) * 100
+          : 0
+
+          return{
+            id:c.id,
+            name:c.name,
+            votes:votes,
+            percent
+          }
+
+        })
+
+        setCandidates(formatted)
+
+      }
 
     }
 
-    // charger candidats
-    const { data: candidatesData } = await supabase
-      .from("candidates")
-      .select("*")
-
-    // charger votes
-    const { data: votesData } = await supabase
-      .from("votes")
-      .select("*")
-      .eq("bureau_id",bureauId)
-
-    // charger stats bureau
-    const { data: statsData } = await supabase
-      .from("bureau_results")
-      .select("*")
-      .eq("bureau_id",bureauId)
-      .single()
-
-    if(statsData){
-
-      setStats({
-        registered:statsData.registered,
-        voters:statsData.voters,
-        blank:statsData.blank,
-        nullVotes:statsData.null_votes
-      })
-
+    if(bureauId){
+      loadData()
     }
 
-    if(candidatesData){
-
-      const expressedVotes = statsData?.expressed || 0
-
-      const formatted = candidatesData.map((c:any)=>{
-
-        const vote = votesData?.find(
-          (v:any)=>v.candidate_id === c.id
-        )
-
-        const votes = vote ? vote.votes : 0
-
-        const percent =
-        expressedVotes > 0
-        ? (votes / expressedVotes) * 100
-        : 0
-
-        return{
-          id:c.id,
-          name:c.name,
-          votes:votes,
-          percent
-        }
-
-      })
-
-      setCandidates(formatted)
-
-    }
-
-  }
-
-  if(bureauId){
-    loadData()
-  }
-
-},[bureauId])
+  },[bureauId])
 
 
   async function handleVote(id:number,newVotes:number){
 
-    updateVote(id,newVotes)
+  updateVote(id,newVotes)
 
-    await supabase
-      .from("votes")
-      .upsert({
-        bureau_id:bureauId,
-        candidate_id:id,
-        votes:newVotes
-      })
+  const { error } = await supabase
+    .from("votes")
+    .upsert({
+      bureau_id: bureauId,
+      candidate_id: id,
+      votes: newVotes
+    },{ onConflict: "bureau_id,candidate_id" })
 
+  if(error){
+    console.error("Erreur sauvegarde vote:", error)
+    alert("Erreur sauvegarde vote")
   }
+
+}
 
 
   return(
@@ -192,11 +209,12 @@ export default function BureauPage(){
 
             {candidates.map(c=>(
               <CandidateCard
-                key={c.id}
-                {...c}
-                onAdd={()=>handleVote(c.id,c.votes+1)}
-                onRemove={()=>handleVote(c.id,Math.max(0,c.votes-1))}
-              />
+  key={c.id}
+  {...c}
+  onAdd={()=>handleVote(c.id,c.votes+1)}
+  onRemove={()=>handleVote(c.id,Math.max(0,c.votes-1))}
+  onSave={(value)=>handleVote(c.id,value)}
+/>
             ))}
 
           </div>
