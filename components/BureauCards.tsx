@@ -16,15 +16,10 @@ b.registered > 0
 ? ((b.voters / b.registered)*100).toFixed(2)
 : "0"
 
-const exprRate =
-b.voters > 0
-? ((b.expressed / b.voters)*100).toFixed(2)
-: "0"
-
 return(
 
 <div
-key={b.id}
+key={`bureau-${b.bureau_id}`}
 className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition"
 >
 
@@ -76,7 +71,7 @@ b.expressed > 0
 return(
 
 <div
-key={i}
+key={`bureau-${b.bureau_id}-candidate-${c[0]}`}
 className="flex justify-between text-sm"
 >
 

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react"
 import Sidebar from "@/components/Sidebar"
 import { supabase } from "@/lib/supabase"
 import BureauCards from "@/components/BureauCards"
+import Image from "next/image"
+import banier from "@/public/banniere.jpg"
 import {
   BarChart,
   Bar,
@@ -322,7 +324,9 @@ style={{width:`${percent}%`}}
 
 </div>
 
-
+<div className="rounded-xl">
+      <Image src={banier} className="mt-4 rounded-xl shadow  w-full" alt="elections"/>
+    </div>
 </div>
 
 </div>

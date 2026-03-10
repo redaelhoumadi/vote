@@ -175,7 +175,7 @@ export default function BureauPage(){
 
     <div className="flex justify-between items-center mb-6">
 
-      <h1 className="text-2xl font-bold bg-white rounded-xl shadow p-4 text-center">
+      <h1 className="text-2xl font-bold bg-white text-black rounded-xl shadow p-4 text-center">
         Bureau — {bureauName || "Chargement..."}
       </h1>
 
