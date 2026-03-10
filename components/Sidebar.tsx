@@ -85,13 +85,14 @@ export default function Sidebar(){
           </div>
         )}
 
-        <div className="p-2">
+        <div className="">
+         
+          <div className="flex flex-col gap-4 p-2">
+            <Link href="/bureaux" className="text-lg hover:bg-blue-600 hover:rounded-sm">🗳️ Bureaux
+            </Link>
+          </div>
 
-          <h2 className="text-lg mb-4">
-            🗳️ Bureaux
-          </h2>
-
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 pl-4">
 
             {bureaux.map((b)=>(
               <Link

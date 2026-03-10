@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
+import Image from "next/image"
+import LogoLogin from "@/public/logo_carre.png"
 
 export default function LoginPage(){
 
@@ -102,13 +104,15 @@ export default function LoginPage(){
 
   return(
 
-    <div className="min-h-screen flex items-center justify-center bg-gray-200">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
 
-      <div className="bg-white p-8 rounded-xl w-[400px] shadow">
+      <div className="bg-white p-20 rounded-xl w-[500px] shadow">
 
-        <h1 className="text-xl font-bold mb-6 text-center">
-          Connexion
-        </h1>
+        <Image src={LogoLogin} alt="logologin" />
+
+        <h2 className="text-md font-meduim mt-6 mb-4 text-center">
+          Merci d'entrer vos informations de connexion
+        </h2>
 
         <form
           onSubmit={handleLogin}
