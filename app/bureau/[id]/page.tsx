@@ -6,6 +6,8 @@ import Sidebar from "@/components/Sidebar"
 import { useVoteStore } from "@/store/voteStore"
 import { supabase } from "@/lib/supabase"
 import Clock from "@/components/Clock"
+import Image from "next/image"
+import election from "@/public/election.png"
 
 export default function BureauPage(){
 
@@ -314,6 +316,10 @@ export default function BureauPage(){
 
       </div>
 
+    </div>
+
+    <div>
+      <Image src={election} className="mt-4 rounded-xl" alt="elections"/>
     </div>
 
   </div>
