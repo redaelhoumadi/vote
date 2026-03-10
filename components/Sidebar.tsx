@@ -3,6 +3,8 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
+import Image from "next/image"
+import Logo from "@/public/LOGO-CARRE-BLANC 1.png"
 
 export default function Sidebar(){
 
@@ -73,9 +75,7 @@ export default function Sidebar(){
 
       <div className="p-1">
 
-        <h2 className="text-xl font-bold mb-4 p-4">
-          Evreux en mouvement
-        </h2>
+        <Image src={Logo} alt="logo" className="p-6"/>
 
         {role === "admin" && (
           <div className="flex flex-col gap-4 p-2">

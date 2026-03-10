@@ -7,7 +7,7 @@ import { useVoteStore } from "@/store/voteStore"
 import { supabase } from "@/lib/supabase"
 import Clock from "@/components/Clock"
 import Image from "next/image"
-import election from "@/public/election.png"
+import beseline from "@/public/BASELINE 1.png"
 
 export default function BureauPage(){
 
@@ -318,8 +318,8 @@ export default function BureauPage(){
 
     </div>
 
-    <div>
-      <Image src={election} className="mt-4 rounded-xl" alt="elections"/>
+    <div className="bg-linear-to-r from-blue-900 to-orange-500 px-120 pt-1 pb-4 rounded-xl mt-8">
+      <Image src={beseline} className="mt-4 rounded-xl w-full" alt="elections"/>
     </div>
 
   </div>
