@@ -7,7 +7,8 @@ import { useVoteStore } from "@/store/voteStore"
 import { supabase } from "@/lib/supabase"
 import Clock from "@/components/Clock"
 import Image from "next/image"
-import beseline from "@/public/BASELINE 1.png"
+import banier from "@/public/banniere.jpg"
+import CandidateCard from "@/components/CandidateCard"
 
 export default function BureauPage(){
 
@@ -174,7 +175,7 @@ export default function BureauPage(){
 
     <div className="flex justify-between items-center mb-6">
 
-      <h1 className="text-2xl font-bold p-6 bg-white rounded-xl shadow p-4 text-center">
+      <h1 className="text-2xl font-bold bg-white rounded-xl shadow p-4 text-center">
         Bureau — {bureauName || "Chargement..."}
       </h1>
 
@@ -239,57 +240,27 @@ export default function BureauPage(){
 
       <div className="col-span-3 grid grid-cols-4 gap-6">
 
-        {candidates.map(c=>(
+{candidates.map(c=>(
 
-          <div
-            key={c.id}
-            className="bg-white rounded-xl shadow p-6 text-center"
-          >
+  <CandidateCard
+    key={c.id}
+    id={c.id}
+    name={c.name}
+    photo={c.photo}
+    votes={c.votes}
+    percent={c.percent}
+    onAdd={()=>handleVote(c.id,c.votes+1)}
+    onRemove={()=>handleVote(c.id,Math.max(0,c.votes-1))}
+    onSave={(value)=>handleVote(c.id,value)}
+  />
 
-            <img
-              src={c.photo || "/candidate.png"}
-              className="w-20 h-20 rounded-full mx-auto mb-4 object-cover"
-            />
+))}
 
-            <h3 className="font-semibold mb-3">
-              {c.name}
-            </h3>
-
-            <div className="flex items-center justify-center gap-3 mb-3">
-
-              <button
-                onClick={()=>handleVote(c.id,Math.max(0,c.votes-1))}
-                className="text-red-500 text-xl bg-red-100 p-1 rounded-sm cursor-pointer px-2"
-              >
-                -
-              </button>
-
-              <div className="bg-gray-100 px-4 py-1 rounded font-black">
-                {c.votes}
-              </div>
-
-              <button
-                onClick={()=>handleVote(c.id,c.votes+1)}
-                className="text-green-500 text-xl bg-green-100 p-1 rounded-sm cursor-pointer px-2"
-              >
-                +
-              </button>
-
-            </div>
-
-            <div className="text-lg font-bold text-blue-800 bg-blue-100 rounded-sm mx-8">
-              {c.percent.toFixed(2)} %
-            </div>
-
-          </div>
-
-        ))}
-
-      </div>
+</div>
 
       <div className="bg-white rounded-xl shadow p-6">
 
-        <h2 className="text-xl font-bold mb-4">
+        <h2 className="text-3xl font-bold mb-4">
          🏆 Classement
         </h2>
 
@@ -299,10 +270,10 @@ export default function BureauPage(){
 
           <div
             key={c.id}
-            className="flex justify-between border-b border-gray-100 py-5"
+            className="flex justify-between border-t border-gray-200 py-5"
           >
 
-            <div>
+            <div className="font-bold">
               {i+1} - {c.name}
             </div>
 
@@ -318,8 +289,8 @@ export default function BureauPage(){
 
     </div>
 
-    <div className="bg-linear-to-r from-blue-900 to-orange-500 px-120 pt-1 pb-4 rounded-xl mt-8">
-      <Image src={beseline} className="mt-4 rounded-xl w-full" alt="elections"/>
+    <div className="pt-1 pb-4 rounded-xl mt-4">
+      <Image src={banier} className="mt-4 rounded-xl shadow  w-full" alt="elections"/>
     </div>
 
   </div>
