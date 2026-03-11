@@ -341,11 +341,11 @@ return(
 
 <div className="bg-white p-4 rounded-xl shadow text-center">
 
-<div className="text-gray-500 text-sm">
+<div className={`text-${color}-500 text-lg`}>
 {title}
 </div>
 
-<div className={`text-2xl font-bold text-${color}-600`}>
+<div className={`text-2xl font-bold text-${color}-500`}>
 {value}
 </div>
 
