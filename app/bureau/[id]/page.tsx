@@ -17,6 +17,11 @@ export default function BureauPage(){
 
   const [bureauName,setBureauName] = useState("")
 
+  const [registeredInput,setRegisteredInput] = useState(0)
+  const [blankInput,setBlankInput] = useState(0)
+  const [nullInput,setNullInput] = useState(0)
+  const [votersInput,setVotersInput] = useState(0)
+
   const {
     candidates,
     setCandidates,
@@ -69,7 +74,6 @@ export default function BureauPage(){
 
       }
 
-      // charger nom bureau
       const { data:bureauData } = await supabase
         .from("bureaux")
         .select("*")
@@ -104,6 +108,10 @@ export default function BureauPage(){
           nullVotes:statsData.null_votes
         })
 
+        setRegisteredInput(statsData.registered)
+setVotersInput(statsData.voters)
+setBlankInput(statsData.blank)
+setNullInput(statsData.null_votes)
       }
 
       if(candidatesData){
@@ -165,6 +173,34 @@ export default function BureauPage(){
 
   }
 
+  async function saveStats(){
+
+  const { error } = await supabase
+  .from("bureau_results")
+  .update({
+    registered: registeredInput,
+    voters: votersInput,
+    blank: blankInput,
+    null_votes: nullInput
+  })
+  .eq("bureau_id",bureauId)
+
+  if(error){
+    alert("Erreur sauvegarde")
+    return
+  }
+
+  setStats({
+    registered: registeredInput,
+    voters: votersInput,
+    blank: blankInput,
+    nullVotes: nullInput
+  })
+
+  alert("Statistiques enregistrées")
+
+}
+
   return(
 
 <div className="flex bg-gray-100 min-h-screen">
@@ -183,34 +219,58 @@ export default function BureauPage(){
 
     </div>
 
-    <div className="grid grid-cols-7 gap-4 mb-8">
+    <div className="grid grid-cols-8 gap-4 mb-4">
 
       <div className="bg-white rounded-xl shadow p-4 text-center">
+
         <div className="text-gray-500 text-sm">Inscrits</div>
-        <div className="text-2xl font-bold text-blue-600">
-          {registered}
-        </div>
+
+        <input
+        type="number"
+        value={registeredInput}
+        onChange={(e)=>setRegisteredInput(Number(e.target.value))}
+        className="w-full mt-2 text-2xl font-bold text-blue-600 border rounded text-center"
+        />
+
       </div>
 
       <div className="bg-white rounded-xl shadow p-4 text-center">
-        <div className="text-gray-500 text-sm">Votants</div>
-        <div className="text-2xl font-bold text-yellow-500">
-          {voters}
-        </div>
-      </div>
+
+<div className="text-gray-500 text-sm">Votants</div>
+
+<input
+type="number"
+value={votersInput}
+onChange={(e)=>setVotersInput(Number(e.target.value))}
+className="w-full mt-2 text-2xl font-bold text-yellow-500 border rounded text-center"
+/>
+
+</div>
 
       <div className="bg-white rounded-xl shadow p-4 text-center">
+
         <div className="text-gray-500 text-sm">Blancs</div>
-        <div className="text-2xl font-bold">
-          {blank}
-        </div>
+
+        <input
+        type="number"
+        value={blankInput}
+        onChange={(e)=>setBlankInput(Number(e.target.value))}
+        className="w-full mt-2 text-2xl font-bold border rounded text-center"
+        />
+
       </div>
 
       <div className="bg-white rounded-xl shadow p-4 text-center">
+
         <div className="text-gray-500 text-sm">Nuls</div>
-        <div className="text-2xl font-bold text-red-500">
-          {nullVotes}
-        </div>
+
+        <input
+        type="number"
+        value={nullInput}
+        onChange={(e)=>setNullInput(Number(e.target.value))}
+        className="w-full mt-2 text-2xl font-bold text-red-500 border rounded text-center"
+        />
+
       </div>
 
       <div className="bg-white rounded-xl shadow p-4 text-center">
@@ -233,6 +293,18 @@ export default function BureauPage(){
           {expressedRate}%
         </div>
       </div>
+
+      <button
+      onClick={saveStats}
+      className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition cursor-pointer"
+      >
+        Enregistrer
+      </button>
+    </div>
+
+    <div className="mb-8">
+
+      
 
     </div>
 
@@ -290,7 +362,7 @@ export default function BureauPage(){
     </div>
 
     <div className="pt-1 pb-4 rounded-xl mt-4">
-      <Image src={banier} className="mt-4 rounded-xl shadow  w-full" alt="elections"/>
+      <Image src={banier} className="mt-4 rounded-xl shadow w-full" alt="elections"/>
     </div>
 
   </div>
