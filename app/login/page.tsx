@@ -104,9 +104,9 @@ export default function LoginPage(){
 
   return(
 
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 xl:p-0 p-4">
 
-      <div className="bg-white p-20 rounded-xl w-[500px] shadow">
+      <div className="bg-white xl:p-20 p-10 rounded-xl w-[500px] shadow">
 
         <Image src={LogoLogin} alt="logologin" />
 

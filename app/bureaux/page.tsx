@@ -93,9 +93,9 @@ return(
 
 <Sidebar/>
 
-<div className="flex-1 p-8">
+<div className="flex-1 p-4">
 
-<div className="flex justify-between items-center mb-6">
+<div className="flex justify-between xl:items-center mb-6 xl:flex-row flex-col items-start gap-6">
 
 <h1 className="text-2xl font-bold">
 🏫 Résultats par bureau

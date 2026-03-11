@@ -98,7 +98,7 @@ ${open ? "translate-x-0" : "-translate-x-full"}
 md:translate-x-0
 `}>
 
-<div className="flex flex-col  h-screen">
+<div className="flex flex-col xl:h-full h-screen">
 
 {/* logo */}
 
