@@ -30,6 +30,31 @@ nullVotes:0
 
 async function loadData(){
 
+/* ---------------- SECURITY ---------------- */
+
+const { data:{user} } = await supabase.auth.getUser()
+
+if(!user){
+window.location.href="/login"
+return
+}
+
+const { data:userData } = await supabase
+.from("users")
+.select("*")
+.eq("id",user.id)
+.single()
+
+if(!userData){
+window.location.href="/login"
+return
+}
+
+if(!userData.access_enabled){
+window.location.href="/blocked"
+return
+}
+
 /* ---------------- VOTES ---------------- */
 
 const { data:votes } = await supabase
@@ -119,6 +144,7 @@ id,
 email,
 access_enabled,
 bureau_id,
+last_seen,
 bureaux(name)
 `)
 .eq("role","agent")
@@ -126,8 +152,6 @@ bureaux(name)
 
 if(error){
 console.error("Erreur chargement users:", error)
-}else{
-console.log("Agents chargés :", usersData)
 }
 
 setUsers(usersData || [])
@@ -222,7 +246,7 @@ Dashboard Élections
 
 </div>
 
-<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+<div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
 
 {/* PARTICIPATION */}
 
@@ -238,27 +262,13 @@ Dashboard Élections
 
 <BarChart data={participationRanking} layout="vertical">
 
-<XAxis
-type="number"
-domain={[0,100]}
-tickFormatter={(v)=>`${v}%`}
-/>
+<XAxis type="number" domain={[0,100]} tickFormatter={(v)=>`${v}%`} />
 
-<YAxis
-type="category"
-dataKey="name"
-width={0}
-/>
+<YAxis type="category" dataKey="name" width={0}/>
 
-<Tooltip
-formatter={(value:any)=>`${value.toFixed(2)} %`}
-/>
+<Tooltip formatter={(value:any)=>`${value.toFixed(2)} %`} />
 
-<Bar
-dataKey="rate"
-fill="#16a34a"
-radius={[0,6,6,0]}
-/>
+<Bar dataKey="rate" fill="#16a34a" radius={[0,6,6,0]}/>
 
 </BarChart>
 
@@ -267,6 +277,8 @@ radius={[0,6,6,0]}
 </div>
 
 </div>
+
+
 
 {/* CLASSEMENT GENERAL */}
 
@@ -316,9 +328,80 @@ style={{width:`${percent}%`}}
 
 </div>
 
+{/* GESTION AGENTS */}
+
+<div className="bg-white p-6 rounded-xl shadow h-152 overflow-auto lg:col-span-2">
+
+<h2 className="text-xl font-bold mb-6">
+🗳️ Gestion des bureaux
+</h2>
+
+{users.map((u:any)=>{
+
+const isOnline =
+u.last_seen &&
+(Date.now() - new Date(u.last_seen).getTime()) < 20000
+
+return(
+
+<div
+key={u.id}
+className="flex justify-between items-center border-b py-3"
+>
+
+<div className="flex gap-2 items-center">
+
+<div className="text-sm font-semibold">
+{u.bureaux?.name}
+</div>
+
+{isOnline ? (
+<span className="text-green-600 font-semibold">🟢 En ligne</span>
+) : (
+<span className="text-gray-400">⚪ Hors ligne</span>
+)}
+
+{!u.access_enabled && (
+<span className="text-red-600 font-semibold">🔴 Bloqué</span>
+)}
+
+</div>
+
+<div>
+
+{u.access_enabled ? (
+
+<button
+onClick={()=>toggleAccess(u.id,false)}
+className="bg-red-500 text-white px-3 py-1 rounded cursor-pointer"
+>
+Bloquer
+</button>
+
+) : (
+
+<button
+onClick={()=>toggleAccess(u.id,true)}
+className="bg-green-500 text-white px-3 py-1 rounded cursor-pointer"
+>
+Débloquer
+</button>
+
+)}
+
+</div>
+
+</div>
+
+)
+
+})}
+
+</div>
+
 {/* GRAPH CANDIDATS */}
 
-<div className="bg-white p-6 rounded-xl shadow lg:col-span-2">
+<div className="bg-white p-6 rounded-xl shadow lg:col-span-4">
 
 <h2 className="text-xl font-bold mb-6">
 📊 Votes par candidat
@@ -343,73 +426,8 @@ style={{width:`${percent}%`}}
 
 </div>
 
-{/* GESTION AGENTS */}
-
-<div className="bg-white p-6 rounded-xl shadow lg:col-span-2">
-
-<h2 className="text-xl font-bold mb-6">
-👮 Gestion des agents
-</h2>
 
 
-{users.map((u:any)=>(
-
-<div
-key={u.id}
-className="flex justify-between items-center border-b py-3"
->
-
-<div>
-
-<div className="text-sm flex gap-2 items-center">
-
-<div className="text-sm text-gray-900 font-semibold">
-{u.bureaux?.name}
-</div>
-
-{u.access_enabled ? (
-<span className="text-green-600 font-semibold">
-🟢 Actif
-</span>
-) : (
-<span className="text-red-600 font-semibold">
-🔴 Bloqué
-</span>
-)}
-
-</div>
-
-</div>
-
-<div>
-
-{u.access_enabled ? (
-
-<button
-onClick={()=>toggleAccess(u.id,false)}
-className="bg-red-500 text-white px-3 py-1 rounded cursor-pointer"
->
-Bloquer
-</button>
-
-) : (
-
-<button
-onClick={()=>toggleAccess(u.id,true)}
-className="bg-green-500 text-white px-3 py-1 rounded  cursor-pointer"
->
-Débloquer
-</button>
-
-)}
-
-</div>
-
-</div>
-
-))}
-
-</div>
 
 </div>
 

@@ -20,6 +20,32 @@ useEffect(()=>{
 
 async function load(){
 
+
+    /* ---------------- SECURITY ---------------- */
+
+const { data:{user} } = await supabase.auth.getUser()
+
+if(!user){
+window.location.href="/login"
+return
+}
+
+const { data:userData } = await supabase
+.from("users")
+.select("*")
+.eq("id",user.id)
+.single()
+
+if(!userData){
+window.location.href="/login"
+return
+}
+
+if(!userData.access_enabled){
+window.location.href="/blocked"
+return
+}
+
 // récupérer les votes
 const { data:votes } = await supabase
 .from("votes")

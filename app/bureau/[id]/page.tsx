@@ -58,9 +58,25 @@ totalCandidateVotes > expressedCalculated
 
 useEffect(()=>{
 
+async function ping(){
+
+const { data:{user} } = await supabase.auth.getUser()
+
+if(!user) return
+
+await supabase
+.from("users")
+.update({
+last_seen:new Date().toISOString()
+})
+.eq("id",user.id)
+
+}
+
 async function loadData(){
-  
-  setLoading(true)
+
+setLoading(true)
+
 const { data:{user} } = await supabase.auth.getUser()
 
 if(!user){
@@ -74,13 +90,21 @@ const { data:userData } = await supabase
 .eq("id",user.id)
 .single()
 
+if(!userData){
+window.location.href="/login"
+return
+}
+
+/* 🚫 accès bloqué */
+
 if(!userData.access_enabled){
 
-showToast("error","Accès bloqué par l'administrateur")
-window.location.href="/login"
+window.location.href="/blocked"
 return
 
 }
+
+/* 🚫 mauvais bureau */
 
 if(userData.role !== "admin" && userData.bureau_id !== bureauId){
 
@@ -89,6 +113,8 @@ window.location.href=`/bureau/${userData.bureau_id}`
 return
 
 }
+
+/* ---------------- bureau ---------------- */
 
 const { data:bureauData } = await supabase
 .from("bureaux")
@@ -100,14 +126,20 @@ if(bureauData){
 setBureauName(bureauData.name)
 }
 
+/* ---------------- candidats ---------------- */
+
 const { data:candidatesData } = await supabase
 .from("candidates")
 .select("*")
+
+/* ---------------- votes ---------------- */
 
 const { data:votesData } = await supabase
 .from("votes")
 .select("*")
 .eq("bureau_id",bureauId)
+
+/* ---------------- stats ---------------- */
 
 const { data:statsData } = await supabase
 .from("bureau_results")
@@ -131,14 +163,16 @@ setNullInput(statsData.null_votes)
 
 }
 
+/* ---------------- format candidats ---------------- */
+
 if(candidatesData){
 
 const expressedVotes = statsData?.expressed || 0
 
-const formatted = candidatesData.map((c:any)=>{
+const formatted = candidatesData.map((c)=>{
 
 const vote = votesData?.find(
-(v:any)=>v.candidate_id === c.id
+(v)=>v.candidate_id === c.id
 )
 
 const votes = vote ? vote.votes : 0
@@ -166,8 +200,17 @@ setLoading(false)
 
 }
 
+/* lancement */
+
 if(bureauId){
+
 loadData()
+ping()
+
+const interval = setInterval(ping,10000)
+
+return ()=>clearInterval(interval)
+
 }
 
 },[bureauId])
