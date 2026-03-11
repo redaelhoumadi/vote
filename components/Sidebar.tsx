@@ -8,120 +8,178 @@ import Logo from "@/public/LOGO-CARRE-BLANC 1.png"
 
 export default function Sidebar(){
 
-  const [bureaux,setBureaux] = useState<any[]>([])
-  const [role,setRole] = useState<string | null>(null)
+const [bureaux,setBureaux] = useState<any[]>([])
+const [role,setRole] = useState<string | null>(null)
+const [open,setOpen] = useState(false)
 
-  useEffect(()=>{
+useEffect(()=>{
 
-    async function loadUser(){
+async function loadUser(){
 
-      const { data:{user} } = await supabase.auth.getUser()
+const { data:{user} } = await supabase.auth.getUser()
+if(!user) return
 
-      if(!user) return
+const { data:userData } = await supabase
+.from("users")
+.select("*")
+.eq("id",user.id)
+.single()
 
-      const { data:userData } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id",user.id)
-        .single()
+if(!userData) return
 
-      if(!userData) return
+setRole(userData.role)
 
-      setRole(userData.role)
+if(userData.role === "admin"){
 
-      // ADMIN → tous les bureaux
-      if(userData.role === "admin"){
+const { data } = await supabase
+.from("bureaux")
+.select("*")
+.order("id")
 
-        const { data } = await supabase
-          .from("bureaux")
-          .select("*")
-          .order("id")
+if(data) setBureaux(data)
 
-        if(data) setBureaux(data)
+}else{
 
-      }
+const { data } = await supabase
+.from("bureaux")
+.select("*")
+.eq("id",userData.bureau_id)
 
-      // AGENT → seulement son bureau
-      else{
+if(data) setBureaux(data)
 
-        const { data } = await supabase
-          .from("bureaux")
-          .select("*")
-          .eq("id",userData.bureau_id)
+}
 
-        if(data) setBureaux(data)
+}
 
-      }
+loadUser()
 
-    }
+},[])
 
-    loadUser()
+async function handleLogout(){
 
-  },[])
+await supabase.auth.signOut()
+window.location.href="/login"
 
+}
 
-  async function handleLogout(){
+return(
 
-    await supabase.auth.signOut()
+<>
 
-    window.location.href = "/login"
+{/* bouton menu mobile */}
 
-  }
+<button
+onClick={()=>setOpen(!open)}
+className="fixed top-4 right-4 z-50 bg-blue-900 text-white p-2 shadow rounded-md md:hidden"
+>
+☰
+</button>
 
+{/* overlay mobile */}
 
-  return(
+{open && (
+<div
+onClick={()=>setOpen(false)}
+className="fixed inset-0 bg-black/40 z-40 md:hidden"
+/>
+)}
 
-    <div className="w-64 bg-blue-900 text-white min-h-screen flex flex-col justify-between">
+{/* sidebar */}
 
-      <div className="p-1">
+<div className={`
+fixed md:relative
+top-0 left-0
+w-64
+bg-blue-900 text-white
+transform transition-transform duration-300
+z-50
+overflow-y-auto
+${open ? "translate-x-0" : "-translate-x-full"}
+md:translate-x-0
+`}>
 
-        <Image src={Logo} alt="logo" className="p-6"/>
+<div className="flex flex-col  h-screen">
 
-        {role === "admin" && (
-          <div className="flex flex-col gap-4 p-2">
-            <Link href="/dashboard" className="text-lg hover:bg-blue-600 hover:rounded-sm">
-              📊 Dashboard
-            </Link>
-          </div>
-        )}
+{/* logo */}
 
-        <div className="">
-         
-          <div className="flex flex-col gap-4 p-2">
-            <Link href="/bureaux" className="text-lg hover:bg-blue-600 hover:rounded-sm">🗳️ Bureaux
-            </Link>
-          </div>
+<div className="">
 
-          <div className="flex flex-col gap-1 pl-4">
+<Image src={Logo} alt="logo" className="p-4"/>
 
-            {bureaux.map((b)=>(
-              <Link
-                key={b.id}
-                href={`/bureau/${b.id}`}
-                className="text-xs hover:text-blue-100 lowercase hover:bg-blue-600 p-1 hover:rounded-sm"
-              >
-                {b.name}
-              </Link>
-            ))}
+{role === "admin" && (
+<div className="flex flex-col gap-4 p-2">
 
-          </div>
+<Link
+href="/dashboard"
+onClick={()=>setOpen(false)}
+className="text-lg hover:bg-blue-600 hover:rounded-sm p-2"
+>
 
-        </div>
+📊 Dashboard
 
-      </div>
+</Link>
 
+</div>
+)}
 
-      {/* bouton logout */}
+<div className="flex flex-col gap-4 p-2">
 
-      <button
-        onClick={handleLogout}
-        className="mt-4 bg-red-500 hover:bg-red-600 text-white py-2 px-4 cursor-pointer"
-      >
-        Déconnexion
-      </button>
+<Link
+href="/bureaux"
+onClick={()=>setOpen(false)}
+className="text-lg hover:bg-blue-600 hover:rounded-sm p-2"
+>
 
-    </div>
+🗳️ Bureaux
 
-  )
+</Link>
+
+</div>
+
+{/* liste bureaux */}
+
+<div className="flex flex-col gap-1 pl-4">
+
+{bureaux.map((b)=>(
+
+<Link
+key={b.id}
+href={`/bureau/${b.id}`}
+onClick={()=>setOpen(false)}
+className="text-xs hover:text-blue-100 lowercase hover:bg-blue-600 p-1 rounded-sm"
+>
+
+{b.name}
+
+</Link>
+
+))}
+
+</div>
+
+</div>
+
+{/* logout */}
+
+<div className="mt-auto p-4">
+
+<button
+onClick={handleLogout}
+className="bg-red-500 hover:bg-red-600 w-full text-white py-2 rounded cursor-pointer"
+>
+
+Déconnexion
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</>
+
+)
 
 }

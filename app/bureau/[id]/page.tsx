@@ -255,9 +255,9 @@ return(
 
 <Sidebar/>
 
-<div className="flex-1 p-8">
+<div className="flex-1 p-4">
 
-<div className="flex justify-between items-center mb-6">
+<div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
 
 <h1 className="text-2xl font-bold bg-white rounded-xl shadow p-4">
 Bureau — {bureauName || "Chargement..."}
@@ -267,7 +267,7 @@ Bureau — {bureauName || "Chargement..."}
 
 </div>
 
-<div className="grid grid-cols-8 gap-4 mb-4">
+<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-8 gap-4 gap-4 mb-4">
 
 <div className="bg-white rounded-xl shadow p-4 text-center">
 
@@ -374,9 +374,9 @@ Enregistrer
 
 
 
-<div className="grid grid-cols-4 gap-6">
+<div className="grid grid-cols-1 xl:grid-cols-4 gap-6 gap-6">
 
-<div className="col-span-3 grid grid-cols-4 gap-6">
+<div className="xl:col-span-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
 
 {candidates.map(c=>(
 
@@ -396,7 +396,7 @@ onSave={(value)=>handleVote(c.id,value)}
 
 </div>
 
-<div className="bg-white rounded-xl shadow p-6">
+<div className="bg-white rounded-xl shadow p-6 mt-6 xl:mt-0">
 
 <h2 className="text-3xl font-bold mb-4">
 🏆 Classement
@@ -428,7 +428,7 @@ className="flex justify-between border-t border-gray-200 py-5"
 </div>
 
 <div className="pt-1 pb-4 rounded-xl mt-4">
-<Image src={banier} className="mt-4 rounded-xl shadow w-full" alt="elections"/>
+<Image src={banier} className="mt-4 rounded-xl shadow w-full object-cover" alt="elections"/>
 </div>
 
 </div>
