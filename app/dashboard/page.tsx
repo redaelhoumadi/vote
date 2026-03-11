@@ -181,14 +181,14 @@ rate
 
 <Sidebar/>
 
-<div className="flex-1 p-8">
+<div className="flex-1 p-4">
 
 <h1 className="text-2xl font-bold mb-6">
 Dashboard Élections
 </h1>
 
 {/* STATS */}
-<div className="grid grid-cols-8 gap-4 mb-10">
+<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-10">
 
 <Card title="Inscrits" value={stats.registered} color="blue"/>
 <Card title="Votants" value={stats.voters} color="yellow"/>
@@ -201,32 +201,7 @@ Dashboard Élections
 
 </div>
 
-<div className="grid grid-cols-4 gap-6">
-
-{/* GRAPH candidats */}
-<div className="bg-white p-6 rounded-xl col-span-2 shadow mb-10">
-
-<h2 className="text-xl font-bold mb-6">
-📊 Votes par candidat
-</h2>
-
-<div style={{width:"100%",height:500}}>
-
-<ResponsiveContainer>
-
-<BarChart data={candidates}>
-<XAxis dataKey="name"/>
-<YAxis/>
-<Tooltip/>
-<Bar dataKey="votes" fill="#2563eb"/>
-</BarChart>
-
-</ResponsiveContainer>
-
-</div>
-
-</div>
-
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
 {/* GRAPH PARTICIPATION PAR BUREAU */}
 <div className="bg-white p-6 rounded-xl shadow mb-10">
@@ -321,6 +296,34 @@ style={{width:`${percent}%`}}
 })}
 
 </div>
+
+
+{/* GRAPH candidats */}
+<div className="bg-white p-6 rounded-xl lg:col-span-2 shadow mb-10">
+
+<h2 className="text-xl font-bold mb-6">
+📊 Votes par candidat
+</h2>
+
+<div style={{width:"100%",height:500}}>
+
+<ResponsiveContainer>
+
+<BarChart data={candidates}>
+<XAxis dataKey="name"/>
+<YAxis/>
+<Tooltip/>
+<Bar dataKey="votes" fill="#2563eb"/>
+</BarChart>
+
+</ResponsiveContainer>
+
+</div>
+
+</div>
+
+
+
 
 </div>
 
