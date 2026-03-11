@@ -3,156 +3,167 @@
 import { useEffect, useState } from "react"
 import Sidebar from "@/components/Sidebar"
 import { supabase } from "@/lib/supabase"
-import BureauCards from "@/components/BureauCards"
 import Image from "next/image"
 import banier from "@/public/banniere.jpg"
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
+BarChart,
+Bar,
+XAxis,
+YAxis,
+Tooltip,
+ResponsiveContainer,
 } from "recharts"
 
 export default function DashboardPage(){
 
-  const [candidates,setCandidates] = useState<any[]>([])
-  const [bureaux,setBureaux] = useState<any[]>([])
-  const [participationData,setParticipationData] = useState<any[]>([])
-  const [activeBureau,setActiveBureau] = useState<any>(null)
+const [candidates,setCandidates] = useState<any[]>([])
+const [bureaux,setBureaux] = useState<any[]>([])
+const [users,setUsers] = useState<any[]>([])
 
-  const [stats,setStats] = useState({
-    registered:0,
-    voters:0,
-    expressed:0,
-    blank:0,
-    nullVotes:0
-  })
+const [stats,setStats] = useState({
+registered:0,
+voters:0,
+expressed:0,
+blank:0,
+nullVotes:0
+})
 
-  async function loadData(){
+async function loadData(){
 
-  const { data:votes } = await supabase
-  .from("votes")
-  .select(`
-    votes,
-    bureau_id,
-    candidate_id,
-    candidates(name)
-  `)
+/* ---------------- VOTES ---------------- */
 
-  const totals:any = {}
-  const bureauVotes:any = {}
+const { data:votes } = await supabase
+.from("votes")
+.select(`
+votes,
+bureau_id,
+candidate_id,
+candidates(name)
+`)
 
-  votes?.forEach((v:any)=>{
+const totals:any = {}
+const bureauVotes:any = {}
 
-    const name = v.candidates.name
+votes?.forEach((v:any)=>{
 
-    if(!totals[name]) totals[name] = 0
-    totals[name] += v.votes
+const name = v.candidates.name
 
-    if(!bureauVotes[v.bureau_id]) bureauVotes[v.bureau_id] = {}
-    if(!bureauVotes[v.bureau_id][name]) bureauVotes[v.bureau_id][name] = 0
+if(!totals[name]) totals[name] = 0
+totals[name] += v.votes
 
-    bureauVotes[v.bureau_id][name] += v.votes
+if(!bureauVotes[v.bureau_id]) bureauVotes[v.bureau_id] = {}
+if(!bureauVotes[v.bureau_id][name]) bureauVotes[v.bureau_id][name] = 0
 
-  })
+bureauVotes[v.bureau_id][name] += v.votes
 
-  const candidatesArray = Object.entries(totals).map(
-    ([name,votes])=>({name,votes})
-  )
+})
 
-  candidatesArray.sort((a:any,b:any)=>b.votes-a.votes)
+const candidatesArray = Object.entries(totals).map(
+([name,votes])=>({name,votes})
+)
 
-  setCandidates(candidatesArray)
+candidatesArray.sort((a:any,b:any)=>b.votes-a.votes)
 
-  const { data:results } = await supabase
-  .from("bureau_results")
-  .select(`
-    *,
-    bureaux(name)
-  `)
+setCandidates(candidatesArray)
 
-  let registered = 0
-  let voters = 0
-  let expressed = 0
-  let blank = 0
-  let nullVotes = 0
+/* ---------------- BUREAUX ---------------- */
 
-  const participationArray:any = []
+const { data:results } = await supabase
+.from("bureau_results")
+.select(`
+*,
+bureaux(name)
+`)
 
-  results?.forEach((b:any)=>{
+let registered = 0
+let voters = 0
+let expressed = 0
+let blank = 0
+let nullVotes = 0
 
-    registered += b.registered
-    voters += b.voters
-    expressed += b.expressed
-    blank += b.blank
-    nullVotes += b.null_votes
+results?.forEach((b:any)=>{
 
-    const part =
-    b.registered > 0
-    ? ((b.voters / b.registered)*100).toFixed(2)
-    : 0
+registered += b.registered
+voters += b.voters
+expressed += b.expressed
+blank += b.blank
+nullVotes += b.null_votes
 
-    participationArray.push({
-      name:b.bureaux?.name || `Bureau ${b.bureau_id}`,
-      value:Number(part),
-      fill:`hsl(${Math.random()*360},70%,50%)`
-    })
+const votesBureau = bureauVotes[b.bureau_id] || {}
 
-    const votesBureau = bureauVotes[b.bureau_id] || {}
+const sorted =
+Object.entries(votesBureau)
+.sort((a:any,b:any)=>b[1]-a[1])
 
-    const sorted =
-    Object.entries(votesBureau)
-    .sort((a:any,b:any)=>b[1]-a[1])
+b.winner = sorted[0] ? sorted[0][0] : "-"
+b.top3 = sorted.slice(0,3)
 
-    const winner = sorted[0]
+})
 
-    b.winner = winner ? winner[0] : "-"
+setStats({
+registered,
+voters,
+expressed,
+blank,
+nullVotes
+})
 
-    // TOP 3 candidats
-    b.top3 = sorted.slice(0,3)
+setBureaux(results || [])
 
-  })
+/* ---------------- USERS (AGENTS) ---------------- */
 
-  setParticipationData(participationArray)
+const { data:usersData, error } = await supabase
+.from("users")
+.select(`
+id,
+email,
+access_enabled,
+bureau_id,
+bureaux(name)
+`)
+.eq("role","agent")
+.order("bureau_id",{ascending:true})
 
-  setStats({
-    registered,
-    voters,
-    expressed,
-    blank,
-    nullVotes
-  })
+if(error){
+console.error("Erreur chargement users:", error)
+}else{
+console.log("Agents chargés :", usersData)
+}
 
-  setBureaux(results || [])
+setUsers(usersData || [])
 
 }
 
-  useEffect(()=>{
+/* ---------------- LOAD ---------------- */
 
-    loadData()
+useEffect(()=>{
 
-    const interval = setInterval(loadData,3000)
+loadData()
 
-    return ()=>clearInterval(interval)
+const interval = setInterval(loadData,3000)
 
-  },[])
+return ()=>clearInterval(interval)
 
-  const participation =
-  stats.registered > 0
-  ? ((stats.voters / stats.registered)*100).toFixed(2)
-  : "0"
+},[])
 
-  const expressedRate =
-  stats.voters > 0
-  ? ((stats.expressed / stats.voters)*100).toFixed(2)
-  : "0"
+/* ---------------- STATS ---------------- */
 
-  const totalVotes =
-  candidates.reduce((acc,c)=>acc+c.votes,0)
+const participation =
+stats.registered > 0
+? ((stats.voters / stats.registered)*100).toFixed(2)
+: "0"
 
-  const participationRanking =
+const expressedRate =
+stats.voters > 0
+? ((stats.expressed / stats.voters)*100).toFixed(2)
+: "0"
+
+const totalVotes =
+candidates.reduce((acc,c)=>acc+c.votes,0)
+
+/* ---------------- PARTICIPATION RANKING ---------------- */
+
+const participationRanking =
 [...bureaux]
 .map((b:any)=>{
 
@@ -169,13 +180,22 @@ rate
 })
 .sort((a,b)=>b.rate-a.rate)
 
-  const colors:any = {
-    "Lefrand":"bg-blue-100 text-blue-700",
-    "Petitjean":"bg-red-100 text-red-700",
-    "Messiha":"bg-purple-100 text-purple-700"
-  }
+/* ---------------- BLOQUER / DEBLOQUER ---------------- */
 
-  return(
+async function toggleAccess(userId:string,enabled:boolean){
+
+await supabase
+.from("users")
+.update({ access_enabled:enabled })
+.eq("id",userId)
+
+loadData()
+
+}
+
+/* ---------------- RENDER ---------------- */
+
+return(
 
 <div className="flex bg-gray-100 min-h-screen">
 
@@ -188,6 +208,7 @@ Dashboard Élections
 </h1>
 
 {/* STATS */}
+
 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-10">
 
 <Card title="Inscrits" value={stats.registered} color="blue"/>
@@ -203,8 +224,9 @@ Dashboard Élections
 
 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-{/* GRAPH PARTICIPATION PAR BUREAU */}
-<div className="bg-white p-6 rounded-xl shadow mb-10">
+{/* PARTICIPATION */}
+
+<div className="bg-white p-6 rounded-xl shadow">
 
 <h2 className="text-xl font-bold mb-6">
 📊 Classement participation
@@ -214,11 +236,7 @@ Dashboard Élections
 
 <ResponsiveContainer>
 
-<BarChart
-data={participationRanking}
-layout="vertical"
-margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
->
+<BarChart data={participationRanking} layout="vertical">
 
 <XAxis
 type="number"
@@ -250,8 +268,9 @@ radius={[0,6,6,0]}
 
 </div>
 
-{/* RESULTATS */}
-<div className="bg-white p-6 rounded-xl shadow mb-10">
+{/* CLASSEMENT GENERAL */}
+
+<div className="bg-white p-6 rounded-xl shadow">
 
 <h2 className="text-xl font-bold mb-6">
 🏆 Classement général
@@ -297,9 +316,9 @@ style={{width:`${percent}%`}}
 
 </div>
 
+{/* GRAPH CANDIDATS */}
 
-{/* GRAPH candidats */}
-<div className="bg-white p-6 rounded-xl lg:col-span-2 shadow mb-10">
+<div className="bg-white p-6 rounded-xl shadow lg:col-span-2">
 
 <h2 className="text-xl font-bold mb-6">
 📊 Votes par candidat
@@ -310,10 +329,12 @@ style={{width:`${percent}%`}}
 <ResponsiveContainer>
 
 <BarChart data={candidates}>
+
 <XAxis dataKey="name"/>
 <YAxis/>
 <Tooltip/>
 <Bar dataKey="votes" fill="#2563eb"/>
+
 </BarChart>
 
 </ResponsiveContainer>
@@ -322,14 +343,80 @@ style={{width:`${percent}%`}}
 
 </div>
 
+{/* GESTION AGENTS */}
+
+<div className="bg-white p-6 rounded-xl shadow lg:col-span-2">
+
+<h2 className="text-xl font-bold mb-6">
+👮 Gestion des agents
+</h2>
 
 
+{users.map((u:any)=>(
+
+<div
+key={u.id}
+className="flex justify-between items-center border-b py-3"
+>
+
+<div>
+
+<div className="text-sm flex gap-2 items-center">
+
+<div className="text-sm text-gray-900 font-semibold">
+{u.bureaux?.name}
+</div>
+
+{u.access_enabled ? (
+<span className="text-green-600 font-semibold">
+🟢 Actif
+</span>
+) : (
+<span className="text-red-600 font-semibold">
+🔴 Bloqué
+</span>
+)}
+
+</div>
+
+</div>
+
+<div>
+
+{u.access_enabled ? (
+
+<button
+onClick={()=>toggleAccess(u.id,false)}
+className="bg-red-500 text-white px-3 py-1 rounded cursor-pointer"
+>
+Bloquer
+</button>
+
+) : (
+
+<button
+onClick={()=>toggleAccess(u.id,true)}
+className="bg-green-500 text-white px-3 py-1 rounded  cursor-pointer"
+>
+Débloquer
+</button>
+
+)}
+
+</div>
+
+</div>
+
+))}
+
+</div>
 
 </div>
 
 <div className="rounded-xl">
-      <Image src={banier} className="mt-4 rounded-xl shadow  w-full" alt="elections"/>
-    </div>
+<Image src={banier} className="mt-4 rounded-xl shadow w-full" alt="elections"/>
+</div>
+
 </div>
 
 </div>

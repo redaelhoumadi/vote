@@ -74,6 +74,14 @@ const { data:userData } = await supabase
 .eq("id",user.id)
 .single()
 
+if(!userData.access_enabled){
+
+showToast("error","Accès bloqué par l'administrateur")
+window.location.href="/login"
+return
+
+}
+
 if(userData.role !== "admin" && userData.bureau_id !== bureauId){
 
 showToast("error","Accès interdit à ce bureau")
