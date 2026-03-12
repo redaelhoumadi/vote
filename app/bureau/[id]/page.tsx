@@ -58,21 +58,6 @@ totalCandidateVotes > expressedCalculated
 
 useEffect(()=>{
 
-async function ping(){
-
-const { data:{user} } = await supabase.auth.getUser()
-
-if(!user) return
-
-await supabase
-.from("users")
-.update({
-last_seen:new Date().toISOString()
-})
-.eq("id",user.id)
-
-}
-
 async function loadData(){
 
 setLoading(true)
@@ -95,23 +80,15 @@ window.location.href="/login"
 return
 }
 
-/* 🚫 accès bloqué */
-
 if(!userData.access_enabled){
-
 window.location.href="/blocked"
 return
-
 }
 
-/* 🚫 mauvais bureau */
-
 if(userData.role !== "admin" && userData.bureau_id !== bureauId){
-
 showToast("error","Accès interdit à ce bureau")
 window.location.href=`/bureau/${userData.bureau_id}`
 return
-
 }
 
 /* ---------------- bureau ---------------- */
@@ -132,14 +109,10 @@ const { data:candidatesData } = await supabase
 .from("candidates")
 .select("*")
 
-/* ---------------- votes ---------------- */
-
 const { data:votesData } = await supabase
 .from("votes")
 .select("*")
 .eq("bureau_id",bureauId)
-
-/* ---------------- stats ---------------- */
 
 const { data:statsData } = await supabase
 .from("bureau_results")
@@ -162,8 +135,6 @@ setBlankInput(statsData.blank)
 setNullInput(statsData.null_votes)
 
 }
-
-/* ---------------- format candidats ---------------- */
 
 if(candidatesData){
 
@@ -200,16 +171,56 @@ setLoading(false)
 
 }
 
-/* lancement */
+/* -------- ping utilisateur connecté -------- */
+
+async function ping(){
+
+const { data:{user} } = await supabase.auth.getUser()
+
+if(!user) return
+
+await supabase
+.from("users")
+.update({
+last_seen:new Date().toISOString()
+})
+.eq("id",user.id)
+
+}
+
+/* -------- vérifier blocage -------- */
+
+async function checkAccess(){
+
+const { data:{user} } = await supabase.auth.getUser()
+
+if(!user) return
+
+const { data:userData } = await supabase
+.from("users")
+.select("access_enabled")
+.eq("id",user.id)
+.single()
+
+if(!userData?.access_enabled){
+window.location.href="/blocked"
+}
+
+}
 
 if(bureauId){
 
 loadData()
 ping()
+checkAccess()
 
-const interval = setInterval(ping,10000)
+const pingInterval = setInterval(ping,5000)
+const accessInterval = setInterval(checkAccess,3000)
 
-return ()=>clearInterval(interval)
+return ()=>{
+clearInterval(pingInterval)
+clearInterval(accessInterval)
+}
 
 }
 
