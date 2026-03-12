@@ -18,6 +18,7 @@ const params = useParams()
 const bureauId = Number(params.id)
 
 const [bureauName,setBureauName] = useState("")
+
 const [registeredInput,setRegisteredInput] = useState(0)
 const [blankInput,setBlankInput] = useState(0)
 const [nullInput,setNullInput] = useState(0)
@@ -26,18 +27,16 @@ const [loading,setLoading] = useState(true)
 
 const {toast,showToast} = useToast()
 
+const votersError = votersInput > registeredInput
+const blankError = blankInput > votersInput
+const nullError = nullInput > votersInput
+
 const {
 candidates,
 setCandidates,
 updateVote,
 setStats
 } = useVoteStore()
-
-/* ---------------- calculs ---------------- */
-
-const votersError = votersInput > registeredInput
-const blankError = blankInput > votersInput
-const nullError = nullInput > votersInput
 
 const participation =
 registeredInput > 0
@@ -54,13 +53,14 @@ votersInput > 0
 const totalCandidateVotes =
 candidates.reduce((acc,c)=>acc + c.votes,0)
 
-/* ---------------- LOAD + PING ---------------- */
+const voteOverflow =
+totalCandidateVotes > expressedCalculated
 
 useEffect(()=>{
 
-let currentUser = null
+async function loadData(){
 
-async function init(){
+setLoading(true)
 
 const { data:{user} } = await supabase.auth.getUser()
 
@@ -68,20 +68,6 @@ if(!user){
 window.location.href="/login"
 return
 }
-
-currentUser = user
-
-await loadData(user)
-await ping(user)
-await checkAccess(user)
-
-}
-
-/* ---------------- load data ---------------- */
-
-async function loadData(user){
-
-setLoading(true)
 
 const { data:userData } = await supabase
 .from("users")
@@ -105,7 +91,7 @@ window.location.href=`/bureau/${userData.bureau_id}`
 return
 }
 
-/* bureau */
+/* ---------------- bureau ---------------- */
 
 const { data:bureauData } = await supabase
 .from("bureaux")
@@ -117,7 +103,7 @@ if(bureauData){
 setBureauName(bureauData.name)
 }
 
-/* candidats */
+/* ---------------- candidats ---------------- */
 
 const { data:candidatesData } = await supabase
 .from("candidates")
@@ -149,8 +135,6 @@ setBlankInput(statsData.blank)
 setNullInput(statsData.null_votes)
 
 }
-
-/* format candidats */
 
 if(candidatesData){
 
@@ -187,9 +171,11 @@ setLoading(false)
 
 }
 
-/* ---------------- ping ---------------- */
+/* -------- ping utilisateur connecté -------- */
 
-async function ping(user){
+async function ping(){
+
+const { data:{user} } = await supabase.auth.getUser()
 
 if(!user) return
 
@@ -202,44 +188,45 @@ last_seen:new Date().toISOString()
 
 }
 
-/* ---------------- vérifier accès ---------------- */
+/* -------- vérifier blocage -------- */
 
-async function checkAccess(user){
+async function checkAccess(){
+
+const { data:{user} } = await supabase.auth.getUser()
 
 if(!user) return
 
-const { data } = await supabase
+const { data:userData } = await supabase
 .from("users")
 .select("access_enabled")
 .eq("id",user.id)
 .single()
 
-if(!data?.access_enabled){
+if(!userData?.access_enabled){
 window.location.href="/blocked"
 }
 
 }
 
-init()
+if(bureauId){
 
-const pingInterval = setInterval(()=>{
-if(currentUser) ping(currentUser)
-},10000)
+loadData()
+ping()
+checkAccess()
 
-const accessInterval = setInterval(()=>{
-if(currentUser) checkAccess(currentUser)
-},5000)
+const pingInterval = setInterval(ping,5000)
+const accessInterval = setInterval(checkAccess,3000)
 
 return ()=>{
 clearInterval(pingInterval)
 clearInterval(accessInterval)
 }
 
+}
+
 },[bureauId])
 
-/* ---------------- votes ---------------- */
-
-async function handleVote(id,newVotes){
+async function handleVote(id:number,newVotes:number){
 
 const oldVotes = candidates.find(c=>c.id===id)?.votes || 0
 
@@ -259,7 +246,7 @@ const { error } = await supabase
 bureau_id:bureauId,
 candidate_id:id,
 votes:newVotes
-},{ onConflict:"bureau_id,candidate_id" })
+},{onConflict:"bureau_id,candidate_id"})
 
 if(error){
 showToast("error","Erreur sauvegarde vote")
@@ -268,8 +255,6 @@ showToast("success","Vote enregistré")
 }
 
 }
-
-/* ---------------- save stats ---------------- */
 
 async function saveStats(){
 
@@ -304,25 +289,25 @@ showToast("success","Statistiques enregistrées")
 
 }
 
-/* ---------------- loading ---------------- */
-
 if(loading){
 return(
 
 <div className="flex items-center justify-center min-h-screen bg-gray-100">
+
 <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"/>
+
 </div>
 
 )
 }
 
-/* ---------------- render ---------------- */
-
 return(
 
 <>
 
-{toast && <Toast type={toast.type} message={toast.message}/>}
+{toast && (
+<Toast type={toast.type} message={toast.message}/>
+)}
 
 <div className="flex bg-gray-100 min-h-screen">
 
@@ -340,9 +325,7 @@ Bureau — {bureauName || "Chargement..."}
 
 </div>
 
-<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-8 gap-4 mb-4">
-
-{/* Inscrits */}
+<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-8 gap-4 gap-4 mb-4">
 
 <div className="bg-white rounded-xl shadow p-4 text-center">
 
@@ -356,8 +339,6 @@ className="w-full mt-2 text-2xl font-bold text-blue-600 border rounded text-cent
 />
 
 </div>
-
-{/* Votants */}
 
 <div className="bg-white rounded-xl shadow p-4 text-center">
 
@@ -373,11 +354,9 @@ ${votersError ? "border-red-500 bg-red-50" : ""}`}
 
 </div>
 
-{/* Blancs */}
-
 <div className="bg-white rounded-xl shadow p-4 text-center">
 
-<div className="text-sm font-bold">Blancs</div>
+<div className="text-black-500 font-bold text-sm">Blancs</div>
 
 <input
 type="number"
@@ -388,8 +367,6 @@ ${blankError ? "border-red-500 bg-red-50" : ""}`}
 />
 
 </div>
-
-{/* Nuls */}
 
 <div className="bg-white rounded-xl shadow p-4 text-center">
 
@@ -405,11 +382,9 @@ ${nullError ? "border-red-900 bg-red-50" : ""}`}
 
 </div>
 
-{/* Exprimés */}
-
 <div className="bg-white rounded-xl shadow p-4 text-center">
 
-<div className="text-green-500 text-lg">Exprimés</div>
+<div className="text-green-500  text-lg">Exprimés</div>
 
 <div className="text-2xl font-bold text-green-500">
 {expressedCalculated}
@@ -417,19 +392,15 @@ ${nullError ? "border-red-900 bg-red-50" : ""}`}
 
 </div>
 
-{/* Taux vote */}
-
 <div className="bg-white rounded-xl shadow p-4 text-center">
 
-<div className="text-orange-500 text-lg">Taux de vote</div>
+<div className="text-orange-500 text-lg ">Taux de vote</div>
 
 <div className="text-2xl font-bold text-orange-500">
 {participation}%
 </div>
 
 </div>
-
-{/* Taux exprimés */}
 
 <div className="bg-white rounded-xl shadow p-4 text-center">
 
@@ -443,20 +414,19 @@ ${nullError ? "border-red-900 bg-red-50" : ""}`}
 
 <button
 onClick={saveStats}
-className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition"
+className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition cursor-pointer"
 >
 Enregistrer
 </button>
 
 </div>
 
-{/* candidats */}
-
-<div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+<div className="grid grid-cols-1 xl:grid-cols-4 gap-6 gap-6">
 
 <div className="xl:col-span-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
 
 {candidates.map(c=>(
+
 <CandidateCard
 key={c.id}
 id={c.id}
@@ -468,11 +438,12 @@ onAdd={()=>handleVote(c.id,c.votes+1)}
 onRemove={()=>handleVote(c.id,Math.max(0,c.votes-1))}
 onSave={(value)=>handleVote(c.id,value)}
 />
+
 ))}
 
 </div>
 
-<div className="bg-white rounded-xl shadow p-6">
+<div className="bg-white rounded-xl shadow p-6 mt-6 xl:mt-0">
 
 <h2 className="text-3xl font-bold mb-4">
 🏆 Classement
