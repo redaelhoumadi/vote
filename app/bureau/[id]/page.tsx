@@ -58,9 +58,9 @@ totalCandidateVotes > expressedCalculated
 
 useEffect(()=>{
 
-async function loadData(){
+let currentUser:any = null
 
-setLoading(true)
+async function init(){
 
 const { data:{user} } = await supabase.auth.getUser()
 
@@ -68,6 +68,20 @@ if(!user){
 window.location.href="/login"
 return
 }
+
+currentUser = user
+
+await loadData(user)
+await ping(user)
+await checkAccess(user)
+
+}
+
+/* ---------------- charger données ---------------- */
+
+async function loadData(user:any){
+
+setLoading(true)
 
 const { data:userData } = await supabase
 .from("users")
@@ -91,7 +105,7 @@ window.location.href=`/bureau/${userData.bureau_id}`
 return
 }
 
-/* ---------------- bureau ---------------- */
+/* bureau */
 
 const { data:bureauData } = await supabase
 .from("bureaux")
@@ -103,7 +117,7 @@ if(bureauData){
 setBureauName(bureauData.name)
 }
 
-/* ---------------- candidats ---------------- */
+/* candidats */
 
 const { data:candidatesData } = await supabase
 .from("candidates")
@@ -140,10 +154,10 @@ if(candidatesData){
 
 const expressedVotes = statsData?.expressed || 0
 
-const formatted = candidatesData.map((c)=>{
+const formatted = candidatesData.map((c:any)=>{
 
 const vote = votesData?.find(
-(v)=>v.candidate_id === c.id
+(v:any)=>v.candidate_id === c.id
 )
 
 const votes = vote ? vote.votes : 0
@@ -171,11 +185,9 @@ setLoading(false)
 
 }
 
-/* -------- ping utilisateur connecté -------- */
+/* ---------------- ping ---------------- */
 
-async function ping(){
-
-const { data:{user} } = await supabase.auth.getUser()
+async function ping(user:any){
 
 if(!user) return
 
@@ -188,45 +200,49 @@ last_seen:new Date().toISOString()
 
 }
 
-/* -------- vérifier blocage -------- */
+/* ---------------- vérifier blocage ---------------- */
 
-async function checkAccess(){
-
-const { data:{user} } = await supabase.auth.getUser()
+async function checkAccess(user:any){
 
 if(!user) return
 
-const { data:userData } = await supabase
+const { data } = await supabase
 .from("users")
 .select("access_enabled")
 .eq("id",user.id)
 .single()
 
-if(!userData?.access_enabled){
+if(!data?.access_enabled){
 window.location.href="/blocked"
 }
 
 }
 
-if(bureauId){
+/* ---------------- lancement ---------------- */
 
-loadData()
-ping()
-checkAccess()
+init()
 
-const pingInterval = setInterval(ping,5000)
-const accessInterval = setInterval(checkAccess,3000)
+const pingInterval = setInterval(()=>{
+if(currentUser) ping(currentUser)
+},10000)
+
+const accessInterval = setInterval(()=>{
+if(currentUser) checkAccess(currentUser)
+},5000)
 
 return ()=>{
 clearInterval(pingInterval)
 clearInterval(accessInterval)
 }
 
-}
-
 },[bureauId])
 
 async function handleVote(id:number,newVotes:number){
+
+    if(newVotes < 0){
+showToast("error","Vote négatif impossible")
+return
+}
 
 const oldVotes = candidates.find(c=>c.id===id)?.votes || 0
 
@@ -257,6 +273,16 @@ showToast("success","Vote enregistré")
 }
 
 async function saveStats(){
+
+    if(
+registeredInput < 0 ||
+votersInput < 0 ||
+blankInput < 0 ||
+nullInput < 0
+){
+showToast("error","Valeurs négatives interdites")
+return
+}
 
 if(votersError || blankError || nullError){
 showToast("error","Erreur dans les statistiques")
@@ -333,6 +359,7 @@ Bureau — {bureauName || "Chargement..."}
 
 <input
 type="number"
+min="0"
 value={registeredInput}
 onChange={(e)=>setRegisteredInput(Number(e.target.value))}
 className="w-full mt-2 text-2xl font-bold text-blue-600 border rounded text-center"
@@ -346,6 +373,7 @@ className="w-full mt-2 text-2xl font-bold text-blue-600 border rounded text-cent
 
 <input
 type="number"
+min="0"
 value={votersInput}
 onChange={(e)=>setVotersInput(Number(e.target.value))}
 className={`w-full mt-2 text-2xl font-bold border rounded text-center text-orange-500
@@ -360,6 +388,7 @@ ${votersError ? "border-red-500 bg-red-50" : ""}`}
 
 <input
 type="number"
+min="0"
 value={blankInput}
 onChange={(e)=>setBlankInput(Number(e.target.value))}
 className={`w-full mt-2 text-2xl font-bold border rounded text-center
@@ -374,6 +403,7 @@ ${blankError ? "border-red-500 bg-red-50" : ""}`}
 
 <input
 type="number"
+min="0"
 value={nullInput}
 onChange={(e)=>setNullInput(Number(e.target.value))}
 className={`w-full mt-2 text-2xl font-bold border rounded text-center text-red-500
