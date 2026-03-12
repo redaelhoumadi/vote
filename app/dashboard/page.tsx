@@ -338,9 +338,11 @@ style={{width:`${percent}%`}}
 
 {users.map((u:any)=>{
 
-const isOnline =
-u.last_seen &&
-(Date.now() - new Date(u.last_seen).getTime()) < 20000
+const lastSeen = u.last_seen
+? new Date(u.last_seen + "Z").getTime()
+: 0
+
+const isOnline = (Date.now() - lastSeen) < 60000
 
 return(
 
