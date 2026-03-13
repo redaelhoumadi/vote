@@ -11,6 +11,11 @@ import banier from "@/public/banniere.jpg"
 import CandidateCard from "@/components/CandidateCard"
 import Toast from "@/components/Toast"
 import { useToast } from "@/hooks/useToast"
+import Badge from "@/public/carte-didentite.png"
+import Vote from "@/public/vote.png"
+import Blanc from "@/public/blanc.png"
+import Nuls from "@/public/nuls.png"
+import Exprime from "@/public/exprime.png"
 
 export default function BureauPage(){
 
@@ -58,9 +63,9 @@ totalCandidateVotes > expressedCalculated
 
 useEffect(()=>{
 
-async function loadData(){
+let currentUser:any = null
 
-setLoading(true)
+async function init(){
 
 const { data:{user} } = await supabase.auth.getUser()
 
@@ -68,6 +73,20 @@ if(!user){
 window.location.href="/login"
 return
 }
+
+currentUser = user
+
+await loadData(user)
+await ping(user)
+await checkAccess(user)
+
+}
+
+/* ---------------- charger données ---------------- */
+
+async function loadData(user:any){
+
+setLoading(true)
 
 const { data:userData } = await supabase
 .from("users")
@@ -91,7 +110,7 @@ window.location.href=`/bureau/${userData.bureau_id}`
 return
 }
 
-/* ---------------- bureau ---------------- */
+/* bureau */
 
 const { data:bureauData } = await supabase
 .from("bureaux")
@@ -103,7 +122,7 @@ if(bureauData){
 setBureauName(bureauData.name)
 }
 
-/* ---------------- candidats ---------------- */
+/* candidats */
 
 const { data:candidatesData } = await supabase
 .from("candidates")
@@ -140,10 +159,10 @@ if(candidatesData){
 
 const expressedVotes = statsData?.expressed || 0
 
-const formatted = candidatesData.map((c)=>{
+const formatted = candidatesData.map((c:any)=>{
 
 const vote = votesData?.find(
-(v)=>v.candidate_id === c.id
+(v:any)=>v.candidate_id === c.id
 )
 
 const votes = vote ? vote.votes : 0
@@ -171,11 +190,9 @@ setLoading(false)
 
 }
 
-/* -------- ping utilisateur connecté -------- */
+/* ---------------- ping ---------------- */
 
-async function ping(){
-
-const { data:{user} } = await supabase.auth.getUser()
+async function ping(user:any){
 
 if(!user) return
 
@@ -188,45 +205,49 @@ last_seen:new Date().toISOString()
 
 }
 
-/* -------- vérifier blocage -------- */
+/* ---------------- vérifier blocage ---------------- */
 
-async function checkAccess(){
-
-const { data:{user} } = await supabase.auth.getUser()
+async function checkAccess(user:any){
 
 if(!user) return
 
-const { data:userData } = await supabase
+const { data } = await supabase
 .from("users")
 .select("access_enabled")
 .eq("id",user.id)
 .single()
 
-if(!userData?.access_enabled){
+if(!data?.access_enabled){
 window.location.href="/blocked"
 }
 
 }
 
-if(bureauId){
+/* ---------------- lancement ---------------- */
 
-loadData()
-ping()
-checkAccess()
+init()
 
-const pingInterval = setInterval(ping,5000)
-const accessInterval = setInterval(checkAccess,3000)
+const pingInterval = setInterval(()=>{
+if(currentUser) ping(currentUser)
+},10000)
+
+const accessInterval = setInterval(()=>{
+if(currentUser) checkAccess(currentUser)
+},5000)
 
 return ()=>{
 clearInterval(pingInterval)
 clearInterval(accessInterval)
 }
 
-}
-
 },[bureauId])
 
 async function handleVote(id:number,newVotes:number){
+
+    if(newVotes < 0){
+showToast("error","Vote négatif impossible")
+return
+}
 
 const oldVotes = candidates.find(c=>c.id===id)?.votes || 0
 
@@ -257,6 +278,16 @@ showToast("success","Vote enregistré")
 }
 
 async function saveStats(){
+
+    if(
+registeredInput < 0 ||
+votersInput < 0 ||
+blankInput < 0 ||
+nullInput < 0
+){
+showToast("error","Valeurs négatives interdites")
+return
+}
 
 if(votersError || blankError || nullError){
 showToast("error","Erreur dans les statistiques")
@@ -329,10 +360,15 @@ Bureau — {bureauName || "Chargement..."}
 
 <div className="bg-white rounded-xl shadow p-4 text-center">
 
-<div className="text-gray-500 text-sm">Inscrits</div>
+<div className="flex items-center justify-center gap-1">
+    <Image src={Badge} alt="badge" className="w-5"/>
+<div className="text-blue-500 text-md font-bold">Inscrits</div>
+</div>
+
 
 <input
 type="number"
+min="0"
 value={registeredInput}
 onChange={(e)=>setRegisteredInput(Number(e.target.value))}
 className="w-full mt-2 text-2xl font-bold text-blue-600 border rounded text-center"
@@ -341,11 +377,13 @@ className="w-full mt-2 text-2xl font-bold text-blue-600 border rounded text-cent
 </div>
 
 <div className="bg-white rounded-xl shadow p-4 text-center">
-
-<div className="text-orange-500 font-bold text-sm">Votants</div>
-
+<div className="flex items-center justify-center gap-1">
+<Image src={Vote} alt="badge" className="w-6"/>
+<div className="text-orange-500 font-bold text-md">Votants</div>
+</div>
 <input
 type="number"
+min="0"
 value={votersInput}
 onChange={(e)=>setVotersInput(Number(e.target.value))}
 className={`w-full mt-2 text-2xl font-bold border rounded text-center text-orange-500
@@ -355,11 +393,13 @@ ${votersError ? "border-red-500 bg-red-50" : ""}`}
 </div>
 
 <div className="bg-white rounded-xl shadow p-4 text-center">
-
+<div className="flex items-center justify-center gap-1">
+    <Image src={Blanc} alt="badge" className="w-6"/>
 <div className="text-black-500 font-bold text-sm">Blancs</div>
-
+</div>
 <input
 type="number"
+min="0"
 value={blankInput}
 onChange={(e)=>setBlankInput(Number(e.target.value))}
 className={`w-full mt-2 text-2xl font-bold border rounded text-center
@@ -369,11 +409,13 @@ ${blankError ? "border-red-500 bg-red-50" : ""}`}
 </div>
 
 <div className="bg-white rounded-xl shadow p-4 text-center">
-
+<div className="flex items-center justify-center gap-1">
+    <Image src={Nuls} alt="badge" className="w-6"/>
 <div className="text-red-500 font-bold text-sm">Nuls</div>
-
+</div>
 <input
 type="number"
+min="0"
 value={nullInput}
 onChange={(e)=>setNullInput(Number(e.target.value))}
 className={`w-full mt-2 text-2xl font-bold border rounded text-center text-red-500
@@ -383,9 +425,10 @@ ${nullError ? "border-red-900 bg-red-50" : ""}`}
 </div>
 
 <div className="bg-white rounded-xl shadow p-4 text-center">
-
+<div className="flex items-center justify-center gap-1">
+    <Image src={Exprime} alt="badge" className="w-6"/>
 <div className="text-green-500  text-lg">Exprimés</div>
-
+</div>
 <div className="text-2xl font-bold text-green-500">
 {expressedCalculated}
 </div>

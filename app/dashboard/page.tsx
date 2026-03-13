@@ -358,13 +358,13 @@ className="flex justify-between items-center border-b py-3"
 </div>
 
 {isOnline ? (
-<span className="text-green-600 font-semibold">🟢 En ligne</span>
+<span className="text-green-600 font-semibold text-sm">🟢 En ligne</span>
 ) : (
-<span className="text-gray-400">⚪ Hors ligne</span>
+<span className="text-gray-400 text-sm">⚪ Hors ligne</span>
 )}
 
 {!u.access_enabled && (
-<span className="text-red-600 font-semibold">🔴 Bloqué</span>
+<span className="text-red-600 font-semibold text-sm">🔴 Bloqué</span>
 )}
 
 </div>
