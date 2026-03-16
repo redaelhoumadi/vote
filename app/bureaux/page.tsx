@@ -8,20 +8,20 @@ import { supabase } from "@/lib/supabase"
 export default function BureauxPage(){
 
 const [bureaux,setBureaux] = useState<any[]>([])
-const [sort,setSort] = useState("desc")
+const [sort,setSort] = useState("participation_desc")
 
 const colors:any = {
 "Lefrand":"bg-blue-100 text-blue-700",
-"Petitjean":"bg-red-100 text-red-700",
-"Messiha":"bg-purple-100 text-purple-700"
+"Brigantino":"bg-red-100 text-red-700",
+"Silighini":"bg-purple-100 text-purple-700",
+"Petitjean":"bg-orange-100 text-orange-700"
 }
 
 useEffect(()=>{
 
 async function load(){
 
-
-    /* ---------------- SECURITY ---------------- */
+/* ---------------- SECURITY ---------------- */
 
 const { data:{user} } = await supabase.auth.getUser()
 
@@ -46,7 +46,8 @@ window.location.href="/blocked"
 return
 }
 
-// récupérer les votes
+/* ---------------- récupérer votes ---------------- */
+
 const { data:votes } = await supabase
 .from("votes")
 .select(`
@@ -69,7 +70,8 @@ bureauVotes[v.bureau_id][name] += v.votes
 
 })
 
-// récupérer résultats bureaux
+/* ---------------- récupérer résultats ---------------- */
+
 const { data:results } = await supabase
 .from("bureau_results")
 .select(`
@@ -101,15 +103,37 @@ load()
 
 },[])
 
+/* ---------------- TRI DYNAMIQUE ---------------- */
 
-// tri dynamique
 const sortedBureaux = [...bureaux].sort((a:any,b:any)=>{
 
-const rateA = a.registered > 0 ? a.voters / a.registered : 0
-const rateB = b.registered > 0 ? b.voters / b.registered : 0
+const participationA = a.registered > 0 ? a.voters / a.registered : 0
+const participationB = b.registered > 0 ? b.voters / b.registered : 0
 
-if(sort === "desc") return rateB - rateA
-return rateA - rateB
+switch(sort){
+
+case "participation_desc":
+return participationB - participationA
+
+case "participation_asc":
+return participationA - participationB
+
+case "registered_desc":
+return b.registered - a.registered
+
+case "registered_asc":
+return a.registered - b.registered
+
+case "votes_desc":
+return b.voters - a.voters
+
+case "votes_asc":
+return a.voters - b.voters
+
+default:
+return 0
+
+}
 
 })
 
@@ -133,12 +157,28 @@ onChange={(e)=>setSort(e.target.value)}
 className="border rounded px-3 py-2 bg-white shadow"
 >
 
-<option value="desc">
-Participation : plus actif
+<option value="participation_desc">
+Participation : + actif
 </option>
 
-<option value="asc">
-Participation : moins actif
+<option value="participation_asc">
+Participation : - actif
+</option>
+
+<option value="registered_desc">
+Inscrits : +
+</option>
+
+<option value="registered_asc">
+Inscrits : -
+</option>
+
+<option value="votes_desc">
+Votes : +
+</option>
+
+<option value="votes_asc">
+Votes : -
 </option>
 
 </select>

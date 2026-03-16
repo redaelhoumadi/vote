@@ -16,6 +16,11 @@ b.registered > 0
 ? ((b.voters / b.registered)*100).toFixed(2)
 : "0"
 
+const exprRate =
+b.voters > 0
+? ((b.expressed / b.voters)*100).toFixed(2)
+: "0"
+
 return(
 
 <div
@@ -29,6 +34,17 @@ className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition"
 <div className="font-bold text-sm">
 🏫 {b.bureaux?.name}
 </div>
+
+</div>
+
+{/* STATS */}
+<div className="grid grid-cols-2 gap-2 text-sm mb-4">
+
+<div>👥 Inscrits : <b>{b.registered}</b></div>
+<div>🗳️ Votants : <b>{b.voters}</b></div>
+<div>⚪ Blancs : <b>{b.blank}</b></div>
+<div>🔴 Nuls : <b>{b.null_votes}</b></div>
+<div>✅ Exprimés : <b>{b.expressed}</b></div>
 
 </div>
 
@@ -51,6 +67,28 @@ Taux de vote :
 className="bg-blue-600 h-2 rounded"
 style={{width:`${voteRate}%`}}
 />
+
+</div>
+
+{/* TAUX EXPRIMES */}
+<div className="mb-4">
+
+<div className="text-xs text-gray-500">
+Taux exprimés
+</div>
+
+<div className="w-full bg-gray-200 rounded h-2">
+
+<div
+className="bg-green-600 h-2 rounded"
+style={{width:`${exprRate}%`}}
+/>
+
+</div>
+
+<div className="text-xs text-gray-600 mt-1">
+{exprRate} %
+</div>
 
 </div>
 
@@ -98,7 +136,11 @@ className="flex justify-between text-sm"
 🏆 Gagnant
 </div>
 
-<span className={`px-3 py-1 rounded text-sm font-semibold ${colors[b.winner] || "bg-gray-100"}`}>
+<span
+className={`px-3 py-1 rounded text-sm font-semibold ${
+colors[b.winner?.split(" ").pop()] || "bg-gray-100 text-gray-700"
+}`}
+>
 {b.winner}
 </span>
 

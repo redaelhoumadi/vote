@@ -39,12 +39,12 @@ return(
 
 <div className="bg-white p-10 rounded-xl shadow text-center">
 
-<h1 className="text-3xl font-bold text-red-600 mb-4">
-🚫 Accès bloqué
+<h1 className="text-3xl font-bold text-blue-600 mb-4">
+🛠️ Application en maintenance
 </h1>
 
 <p className="text-gray-600">
-Votre accès a été suspendu par l'administrateur.
+
 </p>
 
 </div>
