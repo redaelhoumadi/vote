@@ -20,6 +20,9 @@ const [candidates,setCandidates] = useState<any[]>([])
 const [bureaux,setBureaux] = useState<any[]>([])
 const [users,setUsers] = useState<any[]>([])
 
+/* 🔥 TOUR */
+const [round,setRound] = useState(1)
+
 const [stats,setStats] = useState({
 registered:0,
 voters:0,
@@ -55,7 +58,7 @@ window.location.href="/blocked"
 return
 }
 
-/* ---------------- VOTES ---------------- */
+/* ---------------- VOTES (PAR TOUR) ---------------- */
 
 const { data:votes } = await supabase
 .from("votes")
@@ -63,8 +66,10 @@ const { data:votes } = await supabase
 votes,
 bureau_id,
 candidate_id,
+round,
 candidates(name)
 `)
+.eq("round",round)
 
 const totals:any = {}
 const bureauVotes:any = {}
@@ -91,7 +96,7 @@ candidatesArray.sort((a:any,b:any)=>b.votes-a.votes)
 
 setCandidates(candidatesArray)
 
-/* ---------------- BUREAUX ---------------- */
+/* ---------------- BUREAUX (PAR TOUR) ---------------- */
 
 const { data:results } = await supabase
 .from("bureau_results")
@@ -99,6 +104,7 @@ const { data:results } = await supabase
 *,
 bureaux(name)
 `)
+.eq("round",round)
 
 let registered = 0
 let voters = 0
@@ -135,9 +141,9 @@ nullVotes
 
 setBureaux(results || [])
 
-/* ---------------- USERS (AGENTS) ---------------- */
+/* ---------------- USERS ---------------- */
 
-const { data:usersData, error } = await supabase
+const { data:usersData } = await supabase
 .from("users")
 .select(`
 id,
@@ -149,10 +155,6 @@ bureaux(name)
 `)
 .eq("role","agent")
 .order("bureau_id",{ascending:true})
-
-if(error){
-console.error("Erreur chargement users:", error)
-}
 
 setUsers(usersData || [])
 
@@ -168,7 +170,7 @@ const interval = setInterval(loadData,3000)
 
 return ()=>clearInterval(interval)
 
-},[])
+},[round]) // 🔥 MAJ quand change tour
 
 /* ---------------- STATS ---------------- */
 
@@ -204,7 +206,17 @@ rate
 })
 .sort((a,b)=>b.rate-a.rate)
 
-/* ---------------- BLOQUER / DEBLOQUER ---------------- */
+/* ---------------- WINNERS COUNT 🔥 ---------------- */
+
+const winnersCount:any = {}
+
+bureaux.forEach((b:any)=>{
+if(!b.winner) return
+if(!winnersCount[b.winner]) winnersCount[b.winner] = 0
+winnersCount[b.winner]++
+})
+
+/* ---------------- ACCESS ---------------- */
 
 async function toggleAccess(userId:string,enabled:boolean){
 
@@ -227,8 +239,28 @@ return(
 
 <div className="flex-1 p-4">
 
-<h1 className="text-2xl font-bold mb-6">
-Dashboard Élections
+{/* 🔥 SWITCH TOUR */}
+
+<div className="flex gap-3 mb-4">
+
+<button
+onClick={()=>setRound(1)}
+className={`px-4 py-2 cursor-pointer rounded font-semibold ${round===1 ? "bg-blue-600 text-white" : "bg-gray-200"}`}
+>
+1er tour
+</button>
+
+<button
+onClick={()=>setRound(2)}
+className={`px-4 py-2 rounded cursor-pointer font-semibold ${round===2 ? "bg-blue-600 text-white" : "bg-gray-200"}`}
+>
+2ème tour
+</button>
+
+</div>
+
+<h1 className="text-2xl font-bold mb-4">
+Dashboard Élections — Tour {round}
 </h1>
 
 {/* STATS */}
@@ -263,9 +295,7 @@ Dashboard Élections
 <BarChart data={participationRanking} layout="vertical">
 
 <XAxis type="number" domain={[0,100]} tickFormatter={(v)=>`${v}%`} />
-
 <YAxis type="category" dataKey="name" width={0}/>
-
 <Tooltip formatter={(value:any)=>`${value.toFixed(2)} %`} />
 
 <Bar dataKey="rate" fill="#16a34a" radius={[0,6,6,0]}/>
@@ -278,9 +308,7 @@ Dashboard Élections
 
 </div>
 
-
-
-{/* CLASSEMENT GENERAL */}
+{/* CLASSEMENT */}
 
 <div className="bg-white p-6 rounded-xl shadow">
 
@@ -300,24 +328,12 @@ return(
 <div key={c.name} className="mb-5">
 
 <div className="flex justify-between mb-1">
-
-<div className="font-semibold">
-{i+1}. {c.name}
-</div>
-
-<div className="font-bold">
-{c.votes} votes — {percent}%
-</div>
-
+<div className="font-semibold">{i+1}. {c.name}</div>
+<div className="font-bold">{c.votes} — {percent}%</div>
 </div>
 
 <div className="w-full bg-gray-200 rounded h-3">
-
-<div
-className="bg-blue-600 h-3 rounded"
-style={{width:`${percent}%`}}
-/>
-
+<div className="bg-blue-600 h-3 rounded" style={{width:`${percent}%`}}/>
 </div>
 
 </div>
@@ -328,7 +344,7 @@ style={{width:`${percent}%`}}
 
 </div>
 
-{/* GESTION AGENTS */}
+{/* USERS */}
 
 <div className="bg-white p-6 rounded-xl shadow h-152 overflow-auto lg:col-span-2">
 
@@ -346,10 +362,7 @@ const isOnline = (Date.now() - lastSeen) < 60000
 
 return(
 
-<div
-key={u.id}
-className="flex justify-between items-center border-b py-3"
->
+<div key={u.id} className="flex justify-between items-center border-b py-3">
 
 <div className="flex gap-2 items-center">
 
@@ -357,39 +370,21 @@ className="flex justify-between items-center border-b py-3"
 {u.bureaux?.name}
 </div>
 
-{isOnline ? (
-<span className="text-green-600 font-semibold text-sm">🟢 En ligne</span>
-) : (
-<span className="text-gray-400 text-sm">⚪ Hors ligne</span>
-)}
-
-{!u.access_enabled && (
-<span className="text-red-600 font-semibold text-sm">🔴 Bloqué</span>
-)}
+{isOnline
+? <span className="text-green-600 text-sm">🟢 En ligne</span>
+: <span className="text-gray-400 text-sm">⚪ Hors ligne</span>
+}
 
 </div>
 
 <div>
 
-{u.access_enabled ? (
-
 <button
-onClick={()=>toggleAccess(u.id,false)}
-className="bg-red-500 text-white px-3 py-1 rounded cursor-pointer"
+onClick={()=>toggleAccess(u.id,!u.access_enabled)}
+className={`px-3 py-1 rounded text-white ${u.access_enabled ? "bg-red-500" : "bg-green-500"}`}
 >
-Bloquer
+{u.access_enabled ? "Bloquer" : "Débloquer"}
 </button>
-
-) : (
-
-<button
-onClick={()=>toggleAccess(u.id,true)}
-className="bg-green-500 text-white px-3 py-1 rounded cursor-pointer"
->
-Débloquer
-</button>
-
-)}
 
 </div>
 
@@ -401,7 +396,7 @@ Débloquer
 
 </div>
 
-{/* GRAPH CANDIDATS */}
+{/* GRAPH */}
 
 <div className="bg-white p-6 rounded-xl shadow lg:col-span-4">
 
@@ -414,12 +409,10 @@ Débloquer
 <ResponsiveContainer>
 
 <BarChart data={candidates}>
-
 <XAxis dataKey="name"/>
 <YAxis/>
 <Tooltip/>
 <Bar dataKey="votes" fill="#2563eb"/>
-
 </BarChart>
 
 </ResponsiveContainer>
@@ -427,9 +420,6 @@ Débloquer
 </div>
 
 </div>
-
-
-
 
 </div>
 

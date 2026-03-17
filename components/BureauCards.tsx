@@ -24,7 +24,7 @@ b.voters > 0
 return(
 
 <div
-key={`bureau-${b.bureau_id}`}
+key={`bureau-${b.bureau_id}-${b.round}`}
 className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition"
 >
 

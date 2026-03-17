@@ -1,95 +1,41 @@
 import { create } from "zustand"
-import { Candidate } from "@/types/candidate"
-import { supabase } from "@/lib/supabase"
 
-interface VoteState {
+interface VoteStore {
 
-  candidates: Candidate[]
+round:number
+setRound:(r:number)=>void
 
-  registered:number
-  voters:number
-  blank:number
-  nullVotes:number
+candidates:any[]
+setCandidates:(c:any[])=>void
 
-  expressed:number
+stats:any
+setStats:(s:any)=>void
 
-  setCandidates:(c:Candidate[])=>void
-
-  updateVote:(id:number,votes:number)=>void
-
-  setStats:(stats:{
-    registered:number
-    voters:number
-    blank:number
-    nullVotes:number
-  })=>void
+updateVote:(id:number,votes:number)=>void
 
 }
 
-export const useVoteStore = create<VoteState>((set,get)=>({
+export const useVoteStore = create<VoteStore>((set)=>({
 
-  candidates:[],
+round:1,
 
-  registered:0,
-  voters:0,
-  blank:0,
-  nullVotes:0,
+setRound:(r)=>set({round:r}),
 
-  expressed:0,
+candidates:[],
 
-  setCandidates:(candidates)=>{
+setCandidates:(c)=>set({candidates:c}),
 
-    set({candidates})
+stats:{},
 
-  },
+setStats:(s)=>set({stats:s}),
 
-  setStats:(stats)=>{
+updateVote:(id,votes)=>
+set((state:any)=>({
 
-    const expressed =
-      stats.voters -
-      stats.blank -
-      stats.nullVotes
+candidates:state.candidates.map((c:any)=>
+c.id===id ? {...c,votes} : c
+)
 
-    set({
-      ...stats,
-      expressed
-    })
-
-  },
-
-  updateVote: async (id,votes)=>{
-
-  const bureauId = 101
-
-  await supabase
-  .from("votes")
-  .upsert({
-
-    bureau_id:bureauId,
-    candidate_id:id,
-    votes
-
-  })
-
-  const updated = get().candidates.map(c=>
-    c.id===id
-    ? {...c,votes}
-    : c
-  )
-
-  const total =
-  updated.reduce((a,c)=>a+c.votes,0)
-
-  const withPercent =
-  updated.map(c=>({
-
-    ...c,
-    percent: total===0 ? 0 : (c.votes/total)*100
-
-  }))
-
-  set({candidates:withPercent})
-
-}
+}))
 
 }))

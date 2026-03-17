@@ -23,7 +23,6 @@ const params = useParams()
 const bureauId = Number(params.id)
 
 const [bureauName,setBureauName] = useState("")
-
 const [registeredInput,setRegisteredInput] = useState(0)
 const [blankInput,setBlankInput] = useState(0)
 const [nullInput,setNullInput] = useState(0)
@@ -37,9 +36,10 @@ const blankError = blankInput > votersInput
 const nullError = nullInput > votersInput
 
 const {
+round,
+setRound,
 candidates,
 setCandidates,
-updateVote,
 setStats
 } = useVoteStore()
 
@@ -54,12 +54,6 @@ const expressedRate =
 votersInput > 0
 ? ((expressedCalculated / votersInput) * 100).toFixed(2)
 : "0"
-
-const totalCandidateVotes =
-candidates.reduce((acc,c)=>acc + c.votes,0)
-
-const voteOverflow =
-totalCandidateVotes > expressedCalculated
 
 useEffect(()=>{
 
@@ -81,8 +75,6 @@ await ping(user)
 await checkAccess(user)
 
 }
-
-/* ---------------- charger données ---------------- */
 
 async function loadData(user:any){
 
@@ -124,19 +116,66 @@ setBureauName(bureauData.name)
 
 /* candidats */
 
-const { data:candidatesData } = await supabase
+let candidatesData:any = []
+
+if(round === 1){
+
+const { data } = await supabase
 .from("candidates")
 .select("*")
+
+candidatesData = data
+
+}else{
+
+const { data:firstRoundVotes } = await supabase
+.from("votes")
+.select(`
+votes,
+candidate_id,
+candidates(name,photo)
+`)
+.eq("round",1)
+
+const totals:any = {}
+
+firstRoundVotes?.forEach((v:any)=>{
+
+if(!totals[v.candidate_id]){
+totals[v.candidate_id] = {
+id:v.candidate_id,
+name:v.candidates.name,
+photo:v.candidates.photo,
+votes:0
+}
+}
+
+totals[v.candidate_id].votes += v.votes
+
+})
+
+const sorted = Object.values(totals)
+.sort((a:any,b:any)=>b.votes-a.votes)
+
+candidatesData = sorted.slice(0,4)
+
+}
+
+/* votes */
 
 const { data:votesData } = await supabase
 .from("votes")
 .select("*")
 .eq("bureau_id",bureauId)
+.eq("round",round)
+
+/* stats */
 
 const { data:statsData } = await supabase
 .from("bureau_results")
 .select("*")
 .eq("bureau_id",bureauId)
+.eq("round",round)
 .single()
 
 if(statsData){
@@ -155,9 +194,35 @@ setNullInput(statsData.null_votes)
 
 }
 
-if(candidatesData){
+/* format candidats (SANS percent) */
 
-const expressedVotes = statsData?.expressed || 0
+/* 🔥 récupérer les votes du 1er tour pour affichage */
+
+let firstRoundVotesAll:any = []
+let totalFirstRoundVotes = 0
+
+/* 🔥 uniquement si 2ème tour */
+
+if(round === 2){
+
+const { data } = await supabase
+.from("votes")
+.select("*")
+.eq("round",1)
+.eq("bureau_id",bureauId)
+
+firstRoundVotesAll = data || []
+
+totalFirstRoundVotes = firstRoundVotesAll.reduce(
+(acc:any,v:any)=>acc + v.votes,
+0
+)
+
+}
+
+/* format candidats */
+
+if(candidatesData?.length){
 
 const formatted = candidatesData.map((c:any)=>{
 
@@ -165,19 +230,33 @@ const vote = votesData?.find(
 (v:any)=>v.candidate_id === c.id
 )
 
-const votes = vote ? vote.votes : 0
+/* 🔥 seulement si tour 2 */
 
-const percent =
-expressedVotes > 0
-? (votes / expressedVotes) * 100
+let firstVotes = undefined
+let firstPercent = undefined
+
+if(round === 2){
+
+firstVotes = firstRoundVotesAll
+.filter((v:any)=>v.candidate_id === c.id)
+.reduce((acc:any,v:any)=>acc + v.votes,0)
+
+firstPercent =
+totalFirstRoundVotes > 0
+? (firstVotes / totalFirstRoundVotes) * 100
 : 0
+
+}
 
 return{
 id:c.id,
 name:c.name,
 photo:c.photo,
-votes,
-percent
+votes: vote ? vote.votes : 0,
+
+/* 🔥 seulement tour 2 */
+firstRoundVotes:firstVotes,
+firstRoundPercent:firstPercent
 }
 
 })
@@ -190,10 +269,9 @@ setLoading(false)
 
 }
 
-/* ---------------- ping ---------------- */
+/* ping */
 
 async function ping(user:any){
-
 if(!user) return
 
 await supabase
@@ -202,13 +280,11 @@ await supabase
 last_seen:new Date().toISOString()
 })
 .eq("id",user.id)
-
 }
 
-/* ---------------- vérifier blocage ---------------- */
+/* check access */
 
 async function checkAccess(user:any){
-
 if(!user) return
 
 const { data } = await supabase
@@ -220,10 +296,7 @@ const { data } = await supabase
 if(!data?.access_enabled){
 window.location.href="/blocked"
 }
-
 }
-
-/* ---------------- lancement ---------------- */
 
 init()
 
@@ -240,46 +313,55 @@ clearInterval(pingInterval)
 clearInterval(accessInterval)
 }
 
-},[bureauId])
+},[bureauId,round])
+
+/* 🔥 RECALCUL GLOBAL (FIX PRINCIPAL) */
+
+const candidatesWithPercent = candidates.map(c => ({
+...c,
+percent: expressedCalculated > 0
+? (c.votes / expressedCalculated) * 100
+: 0
+}))
+
+/* 🔥 VOTE FIX */
 
 async function handleVote(id:number,newVotes:number){
 
-    if(newVotes < 0){
+if(newVotes < 0){
 showToast("error","Vote négatif impossible")
 return
 }
 
-const oldVotes = candidates.find(c=>c.id===id)?.votes || 0
+const updated = candidates.map(c =>
+c.id === id ? {...c, votes:newVotes} : c
+)
 
-const newTotal =
-totalCandidateVotes - oldVotes + newVotes
+const totalVotes = updated.reduce((acc,c)=>acc + c.votes,0)
 
-if(newTotal > expressedCalculated){
-showToast("warning","Total votes dépasse exprimés")
+if(totalVotes > expressedCalculated){
+showToast("warning","Les votes dépassent les exprimés")
 return
 }
 
-updateVote(id,newVotes)
+setCandidates(updated)
 
-const { error } = await supabase
+await supabase
 .from("votes")
 .upsert({
 bureau_id:bureauId,
 candidate_id:id,
-votes:newVotes
-},{onConflict:"bureau_id,candidate_id"})
-
-if(error){
-showToast("error","Erreur sauvegarde vote")
-}else{
-showToast("success","Vote enregistré")
-}
+votes:newVotes,
+round:round
+},{onConflict:"bureau_id,candidate_id,round"})
 
 }
+
+/* SAVE */
 
 async function saveStats(){
 
-    if(
+if(
 registeredInput < 0 ||
 votersInput < 0 ||
 blankInput < 0 ||
@@ -294,7 +376,23 @@ showToast("error","Erreur dans les statistiques")
 return
 }
 
-const { error } = await supabase
+/* 🔥 CONTROLE IMPORTANT */
+
+const totalVotes = candidates.reduce((acc,c)=>acc + c.votes,0)
+const expressed = votersInput - blankInput - nullInput
+
+if(totalVotes > expressed){
+showToast("error","Les votes candidats dépassent les exprimés")
+return
+}
+
+if(totalVotes < expressed){
+showToast("warning","Exprimés supérieurs aux votes candidats")
+}
+
+/* SAVE */
+
+await supabase
 .from("bureau_results")
 .update({
 registered:registeredInput,
@@ -303,18 +401,7 @@ blank:blankInput,
 null_votes:nullInput
 })
 .eq("bureau_id",bureauId)
-
-if(error){
-showToast("error","Erreur sauvegarde statistiques")
-return
-}
-
-setStats({
-registered:registeredInput,
-voters:votersInput,
-blank:blankInput,
-nullVotes:nullInput
-})
+.eq("round",round)
 
 showToast("success","Statistiques enregistrées")
 
@@ -322,20 +409,15 @@ showToast("success","Statistiques enregistrées")
 
 if(loading){
 return(
-
 <div className="flex items-center justify-center min-h-screen bg-gray-100">
-
 <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"/>
-
 </div>
-
 )
 }
 
 return(
 
 <>
-
 {toast && (
 <Toast type={toast.type} message={toast.message}/>
 )}
@@ -346,15 +428,37 @@ return(
 
 <div className="flex-1 p-4">
 
+{/* SWITCH TOUR */}
+
+<div className="flex gap-3 mb-4">
+
+<button
+onClick={()=>setRound(1)}
+className={`px-4 py-2 cursor-pointer rounded font-semibold ${round===1 ? "bg-blue-600 text-white" : "bg-gray-200"}`}
+>
+1er tour
+</button>
+
+<button
+onClick={()=>setRound(2)}
+className={`px-4 py-2 rounded cursor-pointer font-semibold ${round===2 ? "bg-blue-600 text-white" : "bg-gray-200"}`}
+>
+2ème tour
+</button>
+
+</div>
+
 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
 
 <h1 className="text-2xl font-bold bg-white rounded-xl shadow p-4">
-Bureau — {bureauName || "Chargement..."}
+Bureau — {bureauName}
 </h1>
 
 <Clock/>
 
 </div>
+
+{/* STATS UI (inchangé) */}
 
 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-8 gap-4 gap-4 mb-4">
 
@@ -463,20 +567,24 @@ Enregistrer
 </button>
 
 </div>
+<div className="flex justify-between mt-8">
+{/* CANDIDATS */}
 
-<div className="grid grid-cols-1 xl:grid-cols-4 gap-6 gap-6">
+<div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
 
-<div className="xl:col-span-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-
-{candidates.map(c=>(
+{candidatesWithPercent.map(c=>(
 
 <CandidateCard
-key={c.id}
+key={`${c.id}-${round}`}
 id={c.id}
 name={c.name}
 photo={c.photo}
 votes={c.votes}
 percent={c.percent}
+
+firstRoundVotes={round === 2 ? c.firstRoundVotes : undefined}
+firstRoundPercent={round === 2 ? c.firstRoundPercent : undefined}
+
 onAdd={()=>handleVote(c.id,c.votes+1)}
 onRemove={()=>handleVote(c.id,Math.max(0,c.votes-1))}
 onSave={(value)=>handleVote(c.id,value)}
@@ -486,19 +594,21 @@ onSave={(value)=>handleVote(c.id,value)}
 
 </div>
 
-<div className="bg-white rounded-xl shadow p-6 mt-6 xl:mt-0">
+{/* CLASSEMENT */}
+
+<div className="bg-white rounded-xl shadow p-6">
 
 <h2 className="text-3xl font-bold mb-4">
 🏆 Classement
 </h2>
 
-{[...candidates]
+{[...candidatesWithPercent]
 .sort((a,b)=>b.votes-a.votes)
 .map((c,i)=>(
 
 <div
-key={c.id}
-className="flex justify-between border-t border-gray-200 py-5"
+key={`${c.id}-rank`}
+className="flex justify-between border-t border-gray-200 py-5 gap-6"
 >
 
 <div className="font-bold">
@@ -506,16 +616,14 @@ className="flex justify-between border-t border-gray-200 py-5"
 </div>
 
 <div className="font-bold">
-{c.votes} Votes
+{c.votes} Votes — {c.percent.toFixed(2)}%
 </div>
 
 </div>
 
 ))}
 
-</div>
-
-</div>
+</div></div>
 
 <div className="pt-1 pb-4 rounded-xl mt-4">
 <Image src={banier} className="mt-4 rounded-xl shadow w-full object-cover" alt="elections"/>
