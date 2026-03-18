@@ -479,7 +479,7 @@ const isOnline = (Date.now() - lastSeen) < 60000
 
 return(
 
-<div key={u.id} className="flex justify-between items-center border-b py-3">
+<div key={u.id} className="flex justify-between items-center border-b border-gray-200 py-3">
 
 <div className="flex gap-2 items-center">
 
@@ -498,7 +498,7 @@ return(
 
 <button
 onClick={()=>toggleAccess(u.id,!u.access_enabled)}
-className={`px-3 py-1 rounded text-white ${u.access_enabled ? "bg-red-500" : "bg-green-500"}`}
+className={`px-3 py-1 rounded cursor-pointer text-white ${u.access_enabled ? "bg-red-500" : "bg-green-500"}`}
 >
 {u.access_enabled ? "Bloquer" : "Débloquer"}
 </button>

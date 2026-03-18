@@ -22,6 +22,9 @@ export default function BureauPage(){
 const params = useParams()
 const bureauId = Number(params.id)
 
+/* 🔥 NEW */
+const [role,setRole] = useState("")
+
 const [bureauName,setBureauName] = useState("")
 const [registeredInput,setRegisteredInput] = useState(0)
 const [blankInput,setBlankInput] = useState(0)
@@ -42,6 +45,21 @@ candidates,
 setCandidates,
 setStats
 } = useVoteStore()
+
+/* 🔥 INIT ROUND (localStorage + défaut 2) */
+useEffect(()=>{
+const saved = localStorage.getItem("round")
+if(saved){
+setRound(Number(saved))
+}else{
+setRound(2)
+}
+},[])
+
+/* 🔥 SAVE ROUND */
+useEffect(()=>{
+localStorage.setItem("round",String(round))
+},[round])
 
 const participation =
 registeredInput > 0
@@ -89,6 +107,14 @@ const { data:userData } = await supabase
 if(!userData){
 window.location.href="/login"
 return
+}
+
+/* 🔥 SAVE ROLE */
+setRole(userData.role)
+
+/* 🔥 BLOQUE AGENT SUR TOUR 2 */
+if(userData.role === "agent" && round === 1){
+setRound(2)
 }
 
 if(!userData.access_enabled){
@@ -194,14 +220,10 @@ setNullInput(statsData.null_votes)
 
 }
 
-/* format candidats (SANS percent) */
-
-/* 🔥 récupérer les votes du 1er tour pour affichage */
+/* 🔥 1ER TOUR DATA (SI TOUR 2) */
 
 let firstRoundVotesAll:any = []
 let totalFirstRoundVotes = 0
-
-/* 🔥 uniquement si 2ème tour */
 
 if(round === 2){
 
@@ -230,8 +252,6 @@ const vote = votesData?.find(
 (v:any)=>v.candidate_id === c.id
 )
 
-/* 🔥 seulement si tour 2 */
-
 let firstVotes = undefined
 let firstPercent = undefined
 
@@ -253,8 +273,6 @@ id:c.id,
 name:c.name,
 photo:c.photo,
 votes: vote ? vote.votes : 0,
-
-/* 🔥 seulement tour 2 */
 firstRoundVotes:firstVotes,
 firstRoundPercent:firstPercent
 }
@@ -273,20 +291,15 @@ setLoading(false)
 
 async function ping(user:any){
 if(!user) return
-
-await supabase
-.from("users")
-.update({
+await supabase.from("users").update({
 last_seen:new Date().toISOString()
-})
-.eq("id",user.id)
+}).eq("id",user.id)
 }
 
 /* check access */
 
 async function checkAccess(user:any){
 if(!user) return
-
 const { data } = await supabase
 .from("users")
 .select("access_enabled")
@@ -315,7 +328,7 @@ clearInterval(accessInterval)
 
 },[bureauId,round])
 
-/* 🔥 RECALCUL GLOBAL (FIX PRINCIPAL) */
+/* 🔥 PERCENT */
 
 const candidatesWithPercent = candidates.map(c => ({
 ...c,
@@ -324,7 +337,7 @@ percent: expressedCalculated > 0
 : 0
 }))
 
-/* 🔥 VOTE FIX */
+/* 🔥 VOTE */
 
 async function handleVote(id:number,newVotes:number){
 
@@ -346,9 +359,7 @@ return
 
 setCandidates(updated)
 
-await supabase
-.from("votes")
-.upsert({
+await supabase.from("votes").upsert({
 bureau_id:bureauId,
 candidate_id:id,
 votes:newVotes,
@@ -361,56 +372,24 @@ round:round
 
 async function saveStats(){
 
-if(
-registeredInput < 0 ||
-votersInput < 0 ||
-blankInput < 0 ||
-nullInput < 0
-){
-showToast("error","Valeurs négatives interdites")
-return
-}
-
-if(votersError || blankError || nullError){
-showToast("error","Erreur dans les statistiques")
-return
-}
-
-/* 🔥 CALCUL EXPRESSES */
-
 const expressed = votersInput - blankInput - nullInput
-
-/* 🔥 CONTROLE IMPORTANT */
 
 const totalVotes = candidates.reduce((acc,c)=>acc + c.votes,0)
 
 if(totalVotes > expressed){
-showToast("error","Les votes candidats dépassent les exprimés")
+showToast("error","Les votes dépassent les exprimés")
 return
 }
 
-if(totalVotes < expressed){
-showToast("warning","Exprimés supérieurs aux votes candidats")
-}
-
-/* 🔥 SAVE COMPLET */
-
-const { error } = await supabase
-.from("bureau_results")
-.update({
+await supabase.from("bureau_results").update({
 registered:registeredInput,
 voters:votersInput,
 blank:blankInput,
 null_votes:nullInput,
-expressed:expressed // ✅ AJOUT ICI
+expressed:expressed
 })
 .eq("bureau_id",bureauId)
 .eq("round",round)
-
-if(error){
-showToast("error","Erreur sauvegarde")
-return
-}
 
 showToast("success","Statistiques enregistrées")
 
@@ -427,9 +406,7 @@ return(
 return(
 
 <>
-{toast && (
-<Toast type={toast.type} message={toast.message}/>
-)}
+{toast && <Toast type={toast.type} message={toast.message}/>}
 
 <div className="flex bg-gray-100 min-h-screen">
 
@@ -442,8 +419,12 @@ return(
 <div className="flex gap-3 mb-4">
 
 <button
-onClick={()=>setRound(1)}
-className={`px-4 py-2 cursor-pointer rounded font-semibold ${round===1 ? "bg-blue-600 text-white" : "bg-gray-200"}`}
+onClick={()=> role !== "agent" && setRound(1)}
+disabled={role === "agent"}
+className={`px-4 py-2 cursor-pointer rounded font-semibold 
+${round===1 ? "bg-blue-600 text-white" : "bg-gray-200"}
+${role==="agent" ? "opacity-50 cursor-not-allowed" : ""}
+`}
 >
 1er tour
 </button>
@@ -457,14 +438,12 @@ className={`px-4 py-2 rounded cursor-pointer font-semibold ${round===2 ? "bg-blu
 
 </div>
 
-<div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-
+<div className="flex justify-between mb-6">
 <h1 className="text-2xl font-bold bg-white rounded-xl shadow p-4">
 Bureau — {bureauName}
 </h1>
 
 <Clock/>
-
 </div>
 
 {/* STATS UI (inchangé) */}
@@ -576,10 +555,12 @@ Enregistrer
 </button>
 
 </div>
-<div className="flex justify-between mt-8">
-{/* CANDIDATS */}
+<div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-<div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
+{/* CANDIDATS */}
+<div className="xl:col-span-2">
+
+<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
 
 {candidatesWithPercent.map(c=>(
 
@@ -603,8 +584,9 @@ onSave={(value)=>handleVote(c.id,value)}
 
 </div>
 
-{/* CLASSEMENT */}
+</div>
 
+{/* CLASSEMENT */}
 <div className="bg-white rounded-xl shadow p-6">
 
 <h2 className="text-3xl font-bold mb-4">
@@ -617,7 +599,7 @@ onSave={(value)=>handleVote(c.id,value)}
 
 <div
 key={`${c.id}-rank`}
-className="flex justify-between border-t border-gray-200 py-5 gap-6"
+className="flex justify-between py-5"
 >
 
 <div className="font-bold">
@@ -632,7 +614,9 @@ className="flex justify-between border-t border-gray-200 py-5 gap-6"
 
 ))}
 
-</div></div>
+</div>
+
+</div>
 
 <div className="pt-1 pb-4 rounded-xl mt-4">
 <Image src={banier} className="mt-4 rounded-xl shadow w-full object-cover" alt="elections"/>
