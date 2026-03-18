@@ -376,10 +376,13 @@ showToast("error","Erreur dans les statistiques")
 return
 }
 
+/* 🔥 CALCUL EXPRESSES */
+
+const expressed = votersInput - blankInput - nullInput
+
 /* 🔥 CONTROLE IMPORTANT */
 
 const totalVotes = candidates.reduce((acc,c)=>acc + c.votes,0)
-const expressed = votersInput - blankInput - nullInput
 
 if(totalVotes > expressed){
 showToast("error","Les votes candidats dépassent les exprimés")
@@ -390,18 +393,24 @@ if(totalVotes < expressed){
 showToast("warning","Exprimés supérieurs aux votes candidats")
 }
 
-/* SAVE */
+/* 🔥 SAVE COMPLET */
 
-await supabase
+const { error } = await supabase
 .from("bureau_results")
 .update({
 registered:registeredInput,
 voters:votersInput,
 blank:blankInput,
-null_votes:nullInput
+null_votes:nullInput,
+expressed:expressed // ✅ AJOUT ICI
 })
 .eq("bureau_id",bureauId)
 .eq("round",round)
+
+if(error){
+showToast("error","Erreur sauvegarde")
+return
+}
 
 showToast("success","Statistiques enregistrées")
 

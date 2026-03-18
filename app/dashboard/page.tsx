@@ -19,6 +19,7 @@ export default function DashboardPage(){
 const [candidates,setCandidates] = useState<any[]>([])
 const [bureaux,setBureaux] = useState<any[]>([])
 const [users,setUsers] = useState<any[]>([])
+const [firstRoundCandidates,setFirstRoundCandidates] = useState<any[]>([])
 
 /* 🔥 TOUR */
 const [round,setRound] = useState(1)
@@ -58,6 +59,68 @@ window.location.href="/blocked"
 return
 }
 
+/* 🔥 STEP 1 : TOP 4 DU 1ER TOUR */
+
+let secondRoundCandidates:any = null
+
+if(round === 2){
+
+const { data:firstRoundVotes } = await supabase
+.from("votes")
+.select(`
+votes,
+candidate_id,
+candidates(name)
+`)
+.eq("round",1)
+
+const totalsFirst:any = {}
+
+firstRoundVotes?.forEach((v:any)=>{
+
+const name = v.candidates.name
+
+if(!totalsFirst[name]) totalsFirst[name] = 0
+totalsFirst[name] += v.votes
+
+})
+
+const sorted = Object.entries(totalsFirst)
+.sort((a:any,b:any)=>b[1]-a[1])
+
+secondRoundCandidates = sorted.slice(0,4).map((c:any)=>c[0])
+
+}
+
+/* 🔥 DATA CLASSEMENT 1ER TOUR */
+
+const { data:firstVotes } = await supabase
+.from("votes")
+.select(`
+votes,
+candidates(name)
+`)
+.eq("round",1)
+
+const totalsFirst:any = {}
+
+firstVotes?.forEach((v:any)=>{
+
+const name = v.candidates.name
+
+if(!totalsFirst[name]) totalsFirst[name] = 0
+totalsFirst[name] += v.votes
+
+})
+
+let firstArray = Object.entries(totalsFirst).map(
+([name,votes])=>({name,votes})
+)
+
+firstArray.sort((a:any,b:any)=>b.votes-a.votes)
+
+setFirstRoundCandidates(firstArray)
+
 /* ---------------- VOTES (PAR TOUR) ---------------- */
 
 const { data:votes } = await supabase
@@ -78,6 +141,11 @@ votes?.forEach((v:any)=>{
 
 const name = v.candidates.name
 
+/* 🔥 FILTRE 2EME TOUR */
+if(round === 2 && !secondRoundCandidates?.includes(name)){
+return
+}
+
 if(!totals[name]) totals[name] = 0
 totals[name] += v.votes
 
@@ -88,11 +156,21 @@ bureauVotes[v.bureau_id][name] += v.votes
 
 })
 
-const candidatesArray = Object.entries(totals).map(
+/* 🔥 FORMAT FINAL */
+
+let candidatesArray = Object.entries(totals).map(
 ([name,votes])=>({name,votes})
 )
 
 candidatesArray.sort((a:any,b:any)=>b.votes-a.votes)
+
+/* 🔥 SECURITÉ DOUBLE FILTRE */
+
+if(round === 2 && secondRoundCandidates){
+candidatesArray = candidatesArray.filter(c =>
+secondRoundCandidates.includes(c.name)
+)
+}
 
 setCandidates(candidatesArray)
 
@@ -259,10 +337,6 @@ className={`px-4 py-2 rounded cursor-pointer font-semibold ${round===2 ? "bg-blu
 
 </div>
 
-<h1 className="text-2xl font-bold mb-4">
-Dashboard Élections — Tour {round}
-</h1>
-
 {/* STATS */}
 
 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-10">
@@ -282,7 +356,7 @@ Dashboard Élections — Tour {round}
 
 {/* PARTICIPATION */}
 
-<div className="bg-white p-6 rounded-xl shadow">
+<div className="bg-white p-6 pb-0 rounded-xl shadow">
 
 <h2 className="text-xl font-bold mb-6">
 📊 Classement participation
@@ -310,10 +384,10 @@ Dashboard Élections — Tour {round}
 
 {/* CLASSEMENT */}
 
-<div className="bg-white p-6 rounded-xl shadow">
+<div className="bg-white p-6 rounded-xl shadow shadow h-152 overflow-auto">
 
 <h2 className="text-xl font-bold mb-6">
-🏆 Classement général
+🏆 Classement général — Tour {round}
 </h2>
 
 {candidates.map((c,i)=>{
@@ -341,6 +415,49 @@ return(
 )
 
 })}
+
+{/* 🔥 AFFICHAGE 1ER TOUR */}
+
+{round === 2 && (
+
+<div className="mt-10 border-t pt-6">
+
+<h3 className="text-lg font-bold mb-4 text-gray-600">
+📊 Résultats 1er tour
+</h3>
+
+{firstRoundCandidates.map((c,i)=>{
+
+const totalFirst =
+firstRoundCandidates.reduce((acc,x)=>acc+x.votes,0)
+
+const percent =
+totalFirst > 0
+? ((c.votes / totalFirst)*100).toFixed(2)
+: "0"
+
+return(
+
+<div key={`first-${c.name}`} className="mb-4 opacity-70">
+
+<div className="flex justify-between mb-1">
+<div className="font-semibold">{i+1}. {c.name}</div>
+<div className="font-bold">{c.votes} — {percent}%</div>
+</div>
+
+<div className="w-full bg-gray-200 rounded h-2">
+<div className="bg-gray-500 h-2 rounded" style={{width:`${percent}%`}}/>
+</div>
+
+</div>
+
+)
+
+})}
+
+</div>
+
+)}
 
 </div>
 
