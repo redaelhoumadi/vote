@@ -342,7 +342,7 @@ className={`px-4 py-2 rounded cursor-pointer font-semibold ${round===2 ? "bg-blu
 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-10">
 
 <Card title="Inscrits" value={stats.registered} color="blue"/>
-<Card title="Votants" value={stats.voters} color="yellow"/>
+<Card title="Votants" value={stats.voters} color="orange"/>
 <Card title="Blancs" value={stats.blank} color="gray"/>
 <Card title="Nuls" value={stats.nullVotes} color="red"/>
 <Card title="Exprimés" value={stats.expressed} color="green"/>
