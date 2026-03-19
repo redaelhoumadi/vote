@@ -105,7 +105,7 @@ Enregistrer
 <div className="bg-blue-50 rounded-lg p-2 mt-4">
 
 <h2 className="text-lg text-black">
-Resultats du 1er tour
+Resultat au 1er tour
 </h2>
 <div className="flex justify-center items-center gap-6">
   <div className="text-md font-semibold text-purple-700">

@@ -438,8 +438,8 @@ className={`px-4 py-2 rounded cursor-pointer font-semibold ${round===2 ? "bg-blu
 
 </div>
 
-<div className="flex justify-between mb-6">
-<h1 className="text-2xl font-bold bg-white rounded-xl shadow p-4">
+<div className="flex justify-between mb-6 gap-2">
+<h1 className="text-sm lg:text-2xl font-bold bg-white rounded-xl shadow p-4">
 Bureau — {bureauName}
 </h1>
 
