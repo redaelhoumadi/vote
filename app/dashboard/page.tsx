@@ -319,18 +319,18 @@ return(
 
 {/* 🔥 SWITCH TOUR */}
 
-<div className="flex gap-3 mb-4">
+<div className="flex gap-3 mb-4 p-2 bg-white w-fit rounded-lg">
 
 <button
 onClick={()=>setRound(1)}
-className={`px-4 py-2 cursor-pointer rounded font-semibold ${round===1 ? "bg-blue-600 text-white" : "bg-gray-200"}`}
+className={`px-4 py-2 cursor-pointer rounded-md font-semibold ${round===1 ? "bg-blue-600 text-white" : "bg-white"}`}
 >
 1er tour
 </button>
 
 <button
 onClick={()=>setRound(2)}
-className={`px-4 py-2 rounded cursor-pointer font-semibold ${round===2 ? "bg-blue-600 text-white" : "bg-gray-200"}`}
+className={`px-4 py-2 rounded-md cursor-pointer font-semibold ${round===2 ? "bg-blue-600 text-white" : "bg-white"}`}
 >
 2ème tour
 </button>
