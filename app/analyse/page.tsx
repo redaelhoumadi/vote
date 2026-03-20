@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react"
 import Sidebar from "@/components/Sidebar"
 import { supabase } from "@/lib/supabase"
+import Image from "next/image"
+import banier from "@/public/banniere.jpg"
 
 /* ═══════════════════════════════════════════
    TYPES
@@ -511,7 +513,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4" style={{ gap: 20, marginBottom: 28 }}>
               {kpis.map(card => <KpiBlock key={card.label} card={card} />)}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3" style={{ gap: 20, marginBottom: 28 }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2" style={{ gap: 20, marginBottom: 28 }}>
             {participation && (
               <div style={{ background: "white", borderRadius: 16, padding: "24px 28px", boxShadow: "0 1px 3px rgba(0,0,0,.08)"}}>
                 <h2 style={{ fontSize: 16, fontWeight: 700, color: "#111827", marginBottom: 20 }}>📊 Taux de participation</h2>
@@ -547,7 +549,12 @@ export default function DashboardPage() {
                 ))}
               </div>
             )}
+
+            
             </div>
+            <div className="pt-1 pb-4 rounded-xl mt-4">
+<Image src={banier} className="mt-4 rounded-xl shadow w-full object-cover" alt="elections"/>
+</div>
           </>
         )}
 
