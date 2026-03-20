@@ -382,7 +382,7 @@ export default function DashboardPage() {
         Object.entries(bureauPart)
           .map(([id, p]: any) => ({ name: bureauMap[id] ?? `Bureau ${id}`, participation: p }))
           .sort((a: any, b: any) => b.participation - a.participation)
-          .slice(0, 5)
+          .slice(0, 3)
       )
 
       /* ── CLASSEMENT ── */
@@ -485,10 +485,10 @@ export default function DashboardPage() {
 
       <Sidebar />
 
-      <div style={{ flex: 1, padding: "32px 36px" }}>
+      <div style={{ flex: 1, padding: "32px 16px" }}>
 
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: "#111827", margin: 0 }}>📊 Tableau de bord électoral</h1>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: "#111827", margin: 0 }}>📈 Tableau de bord électoral</h1>
           <p style={{ fontSize: 14, color: "#6b7280", marginTop: 6 }}>Comparaison Tour 1 vs Tour 2 — indicateurs clés, classement & résultats par bureau</p>
         </div>
 
@@ -508,21 +508,20 @@ export default function DashboardPage() {
         {/* ── KPI ── */}
         {tab === "kpi" && (
           <>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 20, marginBottom: 28 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(260px, 1fr))", gap: 20, marginBottom: 28 }}>
               {kpis.map(card => <KpiBlock key={card.label} card={card} />)}
             </div>
+            <div  style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(260px, 1fr))", gap: 20, marginBottom: 28 }}>
             {participation && (
               <div style={{ background: "white", borderRadius: 16, padding: "24px 28px", boxShadow: "0 1px 3px rgba(0,0,0,.08)", marginBottom: 24 }}>
                 <h2 style={{ fontSize: 16, fontWeight: 700, color: "#111827", marginBottom: 20 }}>📊 Taux de participation</h2>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
+                <div style={{ display: "grid", gap: 18 }}>
                   <div>
                     <ProgressBar label="Tour 1" value={participation.r1} max={100} color="#94a3b8" />
                     <ProgressBar label="Tour 2" value={participation.r2} max={100} color="#2563eb" />
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 12 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "#374151" }}><span>Tour 1</span><span style={{ fontWeight: 700 }}>{participation.r1.toFixed(2)} %</span></div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "#374151" }}><span>Tour 2</span><span style={{ fontWeight: 700 }}>{participation.r2.toFixed(2)} %</span></div>
-                    <div style={{ borderTop: "1px solid #f3f4f6", paddingTop: 10, display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+                    <div style={{ paddingTop: 10, display: "flex", justifyContent: "space-between", fontSize: 14 }}>
                       <span style={{ color: "#6b7280" }}>Évolution</span>
                       <span style={{ fontWeight: 700, color: participation.r2 >= participation.r1 ? "#22c55e" : "#ef4444" }}>
                         {participation.r2 >= participation.r1 ? "+" : ""}{(participation.r2 - participation.r1).toFixed(2)} pts
@@ -534,7 +533,7 @@ export default function DashboardPage() {
             )}
             {topBureaux.length > 0 && (
               <div style={{ background: "white", borderRadius: 16, padding: "24px 28px", boxShadow: "0 1px 3px rgba(0,0,0,.08)" }}>
-                <h2 style={{ fontSize: 16, fontWeight: 700, color: "#111827", marginBottom: 20 }}>🏫 Top 5 bureaux — participation au Tour 2</h2>
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: "#111827", marginBottom: 20 }}>🏫 Top 3 bureaux — participation au Tour 2</h2>
                 {topBureaux.map((b, i) => (
                   <div key={b.name} style={{ marginBottom: 14 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, fontSize: 13 }}>
@@ -548,6 +547,7 @@ export default function DashboardPage() {
                 ))}
               </div>
             )}
+            </div>
           </>
         )}
 
@@ -597,7 +597,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))", gap: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(400px, 1fr))", gap: 16 }}>
               {filteredBureaux.map(b => <BureauCard key={b.id} b={b} />)}
             </div>
 

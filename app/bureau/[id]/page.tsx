@@ -412,7 +412,7 @@ return(
 
 <Sidebar/>
 
-<div className="flex-1 p-4">
+<div className="flex-1 p-8">
 
 {/* SWITCH TOUR */}
 

@@ -134,7 +134,7 @@ export default function BureauxPage() {
             Consultez et filtrez les résultats détaillés par bureau de vote
           </p>
         </div>
-
+        <div className="flex justify-between items-center">
         {/* ── SWITCH TOUR ── */}
         <div className="flex gap-1 mb-8 bg-white rounded-xl p-1 shadow-sm w-fit">
           {[
@@ -193,7 +193,7 @@ export default function BureauxPage() {
           </span>
 
         </div>
-
+        </div>
         {/* ── CONTENU ── */}
         {loading ? (
           <div className="flex items-center justify-center py-24">

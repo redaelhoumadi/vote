@@ -91,7 +91,7 @@ export default function Sidebar() {
         className={`
           fixed md:relative
           top-0 left-0
-          w-64
+          w-56
           bg-blue-900 text-white
           transform transition-transform duration-300
           z-50
@@ -100,14 +100,14 @@ export default function Sidebar() {
           md:translate-x-0
         `}
       >
-        <div className="flex flex-col xl:h-full h-screen">
+        <div className="flex flex-col xl:h-full h-screen w-56">
 
           {/* Logo */}
           <div>
             <Image src={Logo} alt="logo" className="p-4" />
 
             {role === "admin" && (
-              <div className="flex flex-col gap-4 p-2">
+              <div className="flex flex-col p-2">
                 <Link
                   href="/dashboard"
                   onClick={() => setOpen(false)}
@@ -115,10 +115,19 @@ export default function Sidebar() {
                 >
                   📊 Dashboard
                 </Link>
+
+                <Link
+                  href="/analyse"
+                  onClick={() => setOpen(false)}
+                  className="text-lg hover:bg-blue-600 hover:rounded-sm p-2"
+                >
+                  📈 Analyse
+                </Link>
               </div>
+              
             )}
 
-            <div className="flex flex-col gap-4 p-2">
+            <div className="flex flex-col p-2">
               <Link
                 href="/bureaux"
                 onClick={() => setOpen(false)}
@@ -155,7 +164,7 @@ export default function Sidebar() {
 
                   {/* Contenu du groupe */}
                   {openGroups[index] && (
-                    <div className="flex flex-col mt-0.5 border-l-2 border-blue-600 ml-2">
+                    <div className="flex flex-col mt-0.5 ml-2">
                       {bureauxInGroup.map((b: any) => (
                         <Link
                           key={b.id}

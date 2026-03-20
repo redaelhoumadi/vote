@@ -60,7 +60,7 @@ className="w-20 h-20 rounded-full mx-auto mb-4 object-cover"
 
 {/* 🔥 RESULTATS ACTUELS */}
 
-<div className="text-xl text-gray-500 font-bold mb-1 bg-gray-100 mb-3 rounded-xl">
+<div className="text-xl text-gray-500 font-bold mb-1 bg-gray-100 mb-3 rounded-md">
 {Number(percent || 0).toFixed(2)} %
 </div>
 
@@ -68,7 +68,7 @@ className="w-20 h-20 rounded-full mx-auto mb-4 object-cover"
 
 <button
 onClick={onRemove}
-className="text-red-500 text-lg bg-red-100 px-7 py-1 rounded cursor-pointer"
+className="text-red-500 text-lg bg-red-100 px-6 py-1 rounded cursor-pointer"
 >
 -
 </button>
@@ -83,7 +83,7 @@ className="w-20 rounded text-center font-bold bg-gray-100 text-xl py-1 text-gray
 
 <button
 onClick={onAdd}
-className="text-green-500 text-lg bg-green-100 px-7 py-1 rounded cursor-pointer"
+className="text-green-500 text-lg bg-green-100 px-6 py-1 rounded cursor-pointer"
 >
 +
 </button>
