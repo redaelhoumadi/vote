@@ -29,10 +29,10 @@ function BureauCard({ b, colors }: { b: any; colors: any }) {
         <div className="flex justify-between items-center mb-3">
           <div className="font-bold text-sm text-gray-900">🏫 {b.bureaux?.name}</div>
           <div
-            className="text-gray-300 text-lg transition-transform duration-200"
+            className="text-gray-300 text-sm transition-transform duration-200"
             style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
           >
-            ⌄ 
+            ▼ 
           </div>
         </div>
 

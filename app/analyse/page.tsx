@@ -82,9 +82,9 @@ function KpiBlock({ card }: { card: KpiCard }) {
         <span style={{ fontSize: 22 }}>{card.icon}</span>
       </div>
       <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
-        <div><div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 2 }}>Tour 1</div><div style={{ fontSize: 26, fontWeight: 800, color: "#111827", lineHeight: 1 }}>{fmt(card.value1)}{card.unit}</div></div>
+        <div><div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 2 }}>1er Tour</div><div style={{ fontSize: 26, fontWeight: 800, color: "#111827", lineHeight: 1 }}>{fmt(card.value1)}{card.unit}</div></div>
         <div style={{ fontSize: 20, color: "#d1d5db", marginBottom: 4 }}>→</div>
-        <div><div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 2 }}>Tour 2</div><div style={{ fontSize: 26, fontWeight: 800, color: "#111827", lineHeight: 1 }}>{fmt(card.value2)}{card.unit}</div></div>
+        <div><div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 2 }}>2éme Tour</div><div style={{ fontSize: 26, fontWeight: 800, color: "#111827", lineHeight: 1 }}>{fmt(card.value2)}{card.unit}</div></div>
       </div>
       <div style={{ display: "flex", gap: 10, alignItems: "center", padding: "8px 12px", borderRadius: 8, background: isGood ? "#f0fdf4" : "#fef2f2" }}>
         <span style={{ fontSize: 13, fontWeight: 700, color }}>{arrow} {isUp ? "+" : ""}{fmt(card.diff)}{card.unit}</span>
@@ -167,36 +167,36 @@ function CandidateRow({ c, index }: { c: CandidateRank; index: number }) {
             {c.party && <div style={{ fontSize: 12, color: "#6b7280" }}>{c.party}</div>}
           </div>
         </div>
-        <div style={{ textAlign: "right" }}><div style={{ fontSize: 11, color: "#9ca3af" }}>Votes T2</div><div style={{ fontWeight: 700, fontSize: 15, color: "#111827" }}>{fmt(c.votes2)}</div></div>
+        <div style={{ textAlign: "right" }}><div style={{ fontSize: 11, color: "#9ca3af" }}>Votes 2éme Tour</div><div style={{ fontWeight: 700, fontSize: 15, color: "#111827" }}>{fmt(c.votes2)}</div></div>
         <div style={{ textAlign: "right" }}><div style={{ fontSize: 11, color: "#9ca3af" }}>Évol. %</div><div style={{ fontWeight: 700, fontSize: 14, color: pctDiffColor }}>{c.pctDiff > 0 ? "+" : ""}{c.pctDiff.toFixed(2)} pts</div></div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}><div style={{ fontSize: 11, color: "#9ca3af" }}>Rang</div><MoveArrow move={c.rankMove} /></div>
-        <div style={{ fontSize: 18, color: "#d1d5db", transform: open ? "rotate(180deg)" : "rotate(0)", transition: "transform .2s" }}>⌄</div>
+        <div style={{ fontSize: 16, width: "fit-content", color: "#d1d5db", transform: open ? "rotate(180deg)" : "rotate(0)", transition: "transform .2s" }}>▼</div>
       </div>
       {open && (
         <div style={{ padding: "16px 20px 20px", borderTop: "1px solid #f3f4f6" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-6">
             <div style={{ background: "#f8fafc", borderRadius: 10, padding: "14px 16px" }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 12, textTransform: "uppercase", letterSpacing: ".05em" }}>Classements</div>
               <div style={{ display: "flex", justifyContent: "space-around" }}>
-                <div style={{ textAlign: "center" }}><div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 6 }}>Tour 1</div><RankBadge rank={c.rank1} /></div>
+                <div style={{ textAlign: "center" }}><div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 6 }}>1er Tour</div><RankBadge rank={c.rank1} /></div>
                 <div style={{ fontSize: 24, color: "#d1d5db", alignSelf: "center" }}>→</div>
-                <div style={{ textAlign: "center" }}><div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 6 }}>Tour 2</div><RankBadge rank={c.rank2} /></div>
+                <div style={{ textAlign: "center" }}><div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 6 }}>2éme Tour</div><RankBadge rank={c.rank2} /></div>
               </div>
             </div>
             <div style={{ background: "#f8fafc", borderRadius: 10, padding: "14px 16px" }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 12, textTransform: "uppercase", letterSpacing: ".05em" }}>Votes</div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}><span style={{ fontSize: 13, color: "#6b7280" }}>Tour 1</span><span style={{ fontWeight: 700, color: "#374151" }}>{fmt(c.votes1)}</span></div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}><span style={{ fontSize: 13, color: "#6b7280" }}>Tour 2</span><span style={{ fontWeight: 700, color: "#374151" }}>{fmt(c.votes2)}</span></div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}><span style={{ fontSize: 13, color: "#6b7280" }}>1er Tour</span><span style={{ fontWeight: 700, color: "#374151" }}>{fmt(c.votes1)}</span></div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}><span style={{ fontSize: 13, color: "#6b7280" }}>2éme Tour</span><span style={{ fontWeight: 700, color: "#374151" }}>{fmt(c.votes2)}</span></div>
               <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: 8, display: "flex", justifyContent: "space-between" }}>
                 <span style={{ fontSize: 13, color: "#6b7280" }}>Différence</span>
-                <span style={{ fontWeight: 800, fontSize: 14, color: c.voteDiff >= 0 ? "#16a34a" : "#dc2626" }}>{c.voteDiff >= 0 ? "+" : ""}{fmt(c.voteDiff)}</span>
+                <span style={{ fontWeight: 800, fontSize: 14, color: c.voteDiff >= 0 ? "#16a34a" : "#dc2626" }}>{c.voteDiff >= 0 ? "+" : ""}{fmt(c.voteDiff)} votes</span>
               </div>
             </div>
             <div style={{ background: "#f8fafc", borderRadius: 10, padding: "14px 16px" }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 12, textTransform: "uppercase", letterSpacing: ".05em" }}>Part des votes</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <VoteBar pct={c.pct1} color="#94a3b8" label="Tour 1" />
-                <VoteBar pct={c.pct2} color="#2563eb" label="Tour 2" />
+                <VoteBar pct={c.pct1} color="#94a3b8" label="1er Tour" />
+                <VoteBar pct={c.pct2} color="#2563eb" label="2éme Tour" />
               </div>
             </div>
           </div>
@@ -243,20 +243,20 @@ function BureauCard({ b }: { b: BureauComparison }) {
               </div>
             )}
           </div>
-          <div style={{ fontSize: 16, color: "#d1d5db", transform: open ? "rotate(180deg)" : "rotate(0)", transition: "transform .2s" }}>⌄</div>
+          <div style={{ fontSize: 16, color: "#d1d5db", transform: open ? "rotate(180deg)" : "rotate(0)", transition: "transform .2s" }}>▼</div>
         </div>
 
         {/* Stats en 3 blocs */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
 
           <div style={{ background: "#f8fafc", borderRadius: 10, padding: "10px 14px" }}>
-            <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Tour 1</div>
+            <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>1er Tour</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: "#374151" }}>{b.participation1.toFixed(1)} %</div>
             <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{fmt(b.voters1)} / {fmt(b.registered1)}</div>
           </div>
 
           <div style={{ background: "#eff6ff", borderRadius: 10, padding: "10px 14px" }}>
-            <div style={{ fontSize: 10, color: "#3b82f6", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Tour 2</div>
+            <div style={{ fontSize: 10, color: "#3b82f6", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>2éme Tour</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: "#1d4ed8" }}>{b.participation2.toFixed(1)} %</div>
             <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{fmt(b.voters2)} / {fmt(b.registered2)}</div>
           </div>
@@ -296,8 +296,8 @@ function BureauCard({ b }: { b: BureauComparison }) {
           {/* En-tête tableau */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 80px 80px", gap: 8, padding: "0 0 8px", borderBottom: "2px solid #f3f4f6", marginBottom: 4 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: ".05em" }}>Indicateur</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textAlign: "right", textTransform: "uppercase", letterSpacing: ".05em" }}>T1</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#2563eb", textAlign: "right", textTransform: "uppercase", letterSpacing: ".05em" }}>T2</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textAlign: "right", textTransform: "uppercase", letterSpacing: ".05em" }}>1er Tour</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#2563eb", textAlign: "right", textTransform: "uppercase", letterSpacing: ".05em" }}>2éme Tour</span>
             <span style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", textAlign: "right", textTransform: "uppercase", letterSpacing: ".05em" }}>Diff.</span>
           </div>
           <StatRow label="Inscrits"     v1={b.registered1} v2={b.registered2} goodIfUp={true}  />
@@ -485,21 +485,21 @@ export default function DashboardPage() {
 
       <Sidebar />
 
-      <div style={{ flex: 1, padding: "32px 16px" }}>
+      <div style={{ flex: 1, padding: "16px 16px" }}>
 
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: "#111827", margin: 0 }}>📈 Tableau de bord électoral</h1>
-          <p style={{ fontSize: 14, color: "#6b7280", marginTop: 6 }}>Comparaison Tour 1 vs Tour 2 — indicateurs clés, classement & résultats par bureau</p>
+          <h1 className="text-xl" style={{ fontWeight: 800, color: "#111827", margin: 0 }}>📈 Tableau de bord électoral</h1>
+          <p className="text-xs" style={{ color: "#6b7280", marginTop: 6 }}>Comparaison 1er Tour vs 2éme Tour — indicateurs clés, classement & résultats par bureau</p>
         </div>
 
         {/* ONGLETS */}
-        <div style={{ display: "flex", gap: 4, marginBottom: 32, background: "white", borderRadius: 12, padding: 4, boxShadow: "0 1px 3px rgba(0,0,0,.08)", width: "fit-content" }}>
+        <div className="flex" style={{ gap: 4, marginBottom: 32, background: "white", borderRadius: 12, padding: 4, boxShadow: "0 1px 3px rgba(0,0,0,.08)", width: "fit-content" }}>
           {([
             { key: "kpi",        label: "📈 KPI & Participation" },
             { key: "classement", label: "🏅 Classement candidats" },
-            { key: "bureaux",    label: `🏫 Bureaux (${bureauComparisons.length})` },
+            { key: "bureaux",    label: `🏫 Bureaux` },
           ] as { key: Tab; label: string }[]).map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: "10px 20px", borderRadius: 9, border: "none", fontSize: 14, fontWeight: 600, cursor: "pointer", background: tab === t.key ? "#2563eb" : "transparent", color: tab === t.key ? "white" : "#6b7280", transition: "all .15s" }}>
+            <button className="text-left p-3" key={t.key} onClick={() => setTab(t.key)} style={{ borderRadius: 9, border: "none", fontSize: 14, fontWeight: 600, cursor: "pointer", background: tab === t.key ? "#2563eb" : "transparent", color: tab === t.key ? "white" : "#6b7280", transition: "all .15s" }}>
               {t.label}
             </button>
           ))}
@@ -508,17 +508,17 @@ export default function DashboardPage() {
         {/* ── KPI ── */}
         {tab === "kpi" && (
           <>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(260px, 1fr))", gap: 20, marginBottom: 28 }}>
+            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4" style={{ gap: 20, marginBottom: 28 }}>
               {kpis.map(card => <KpiBlock key={card.label} card={card} />)}
             </div>
-            <div  style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(260px, 1fr))", gap: 20, marginBottom: 28 }}>
+            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3" style={{ gap: 20, marginBottom: 28 }}>
             {participation && (
-              <div style={{ background: "white", borderRadius: 16, padding: "24px 28px", boxShadow: "0 1px 3px rgba(0,0,0,.08)", marginBottom: 24 }}>
+              <div style={{ background: "white", borderRadius: 16, padding: "24px 28px", boxShadow: "0 1px 3px rgba(0,0,0,.08)"}}>
                 <h2 style={{ fontSize: 16, fontWeight: 700, color: "#111827", marginBottom: 20 }}>📊 Taux de participation</h2>
                 <div style={{ display: "grid", gap: 18 }}>
                   <div>
-                    <ProgressBar label="Tour 1" value={participation.r1} max={100} color="#94a3b8" />
-                    <ProgressBar label="Tour 2" value={participation.r2} max={100} color="#2563eb" />
+                    <ProgressBar label="1er Tour" value={participation.r1} max={100} color="#94a3b8" />
+                    <ProgressBar label="2éme Tour" value={participation.r2} max={100} color="#2563eb" />
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 12 }}>
                     <div style={{ paddingTop: 10, display: "flex", justifyContent: "space-between", fontSize: 14 }}>
@@ -532,8 +532,8 @@ export default function DashboardPage() {
               </div>
             )}
             {topBureaux.length > 0 && (
-              <div style={{ background: "white", borderRadius: 16, padding: "24px 28px", boxShadow: "0 1px 3px rgba(0,0,0,.08)" }}>
-                <h2 style={{ fontSize: 16, fontWeight: 700, color: "#111827", marginBottom: 20 }}>🏫 Top 3 bureaux — participation au Tour 2</h2>
+              <div style={{ background: "white", borderRadius: 16, padding: "24px 28px", maxHeight: 228, boxShadow: "0 1px 3px rgba(0,0,0,.08)" }}>
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: "#111827", marginBottom: 20}}>🏫 Top 3 bureaux — participation au 2éme Tour</h2>
                 {topBureaux.map((b, i) => (
                   <div key={b.name} style={{ marginBottom: 14 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, fontSize: 13 }}>
@@ -562,14 +562,14 @@ export default function DashboardPage() {
               ))}
             </div>
             <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
-              {[{ key: "rank2", label: "Classement T2" }, { key: "rankMove", label: "Meilleure progression" }, { key: "votes2", label: "Plus de votes T2" }, { key: "pctDiff", label: "Meilleure évolution %" }].map(opt => (
+              {[{ key: "rank2", label: "Classement 2éme Tour" }, { key: "rankMove", label: "Meilleure progression" }, { key: "votes2", label: "Plus de votes 2éme Tour" }, { key: "pctDiff", label: "Meilleure évolution %" }].map(opt => (
                 <button key={opt.key} onClick={() => setSortBy(opt.key as any)} style={{ padding: "7px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", background: sortBy === opt.key ? "#2563eb" : "white", color: sortBy === opt.key ? "white" : "#374151", boxShadow: "0 1px 3px rgba(0,0,0,.08)", transition: "all .15s" }}>
                   {opt.label}
                 </button>
               ))}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 80px 80px 80px 40px", gap: 16, padding: "0 20px", marginBottom: 8 }}>
-              {["Rang T2", "Candidat", "Votes T2", "Évol. %pts", "Rang ↕", ""].map(h => (
+              {["Rang 2éme Tour", "Candidat", "Votes 2éme Tour", "Évol. %pts", "Rang ↕", ""].map(h => (
                 <div key={h} style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: ".05em" }}>{h}</div>
               ))}
             </div>
@@ -592,12 +592,12 @@ export default function DashboardPage() {
                 ))}
               </div>
               <div style={{ display: "flex", gap: 16, fontSize: 12 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 14, height: 4, borderRadius: 99, background: "#94a3b8" }} /><span style={{ color: "#6b7280" }}>Tour 1</span></div>
-                <div style={{ display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 14, height: 4, borderRadius: 99, background: "#2563eb" }} /><span style={{ color: "#6b7280" }}>Tour 2</span></div>
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 14, height: 4, borderRadius: 99, background: "#94a3b8" }} /><span style={{ color: "#6b7280" }}>1er Tour</span></div>
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 14, height: 4, borderRadius: 99, background: "#2563eb" }} /><span style={{ color: "#6b7280" }}>2éme Tour</span></div>
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(400px, 1fr))", gap: 16 }}>
+            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {filteredBureaux.map(b => <BureauCard key={b.id} b={b} />)}
             </div>
 

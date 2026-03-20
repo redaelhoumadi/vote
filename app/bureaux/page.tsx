@@ -123,18 +123,18 @@ export default function BureauxPage() {
 
       <Sidebar />
 
-      <div className="flex-1 p-8">
+      <div className="flex-1 p-4">
 
         {/* ── TITRE ── */}
         <div className="mb-7">
-          <h1 className="text-3xl font-extrabold text-gray-900">
+          <h1 className="text-2xl font-extrabold text-gray-900">
             🏫 Résultats par bureau
           </h1>
           <p className="text-sm text-gray-500 mt-1.5">
             Consultez et filtrez les résultats détaillés par bureau de vote
           </p>
         </div>
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col xl:flex-row justify-between">
         {/* ── SWITCH TOUR ── */}
         <div className="flex gap-1 mb-8 bg-white rounded-xl p-1 shadow-sm w-fit">
           {[
