@@ -488,7 +488,7 @@ export default function DashboardPage() {
       <div style={{ flex: 1, padding: "16px 16px" }}>
 
         <div style={{ marginBottom: 28 }}>
-          <h1 className="text-xl" style={{ fontWeight: 800, color: "#111827", margin: 0 }}>📈 Tableau de bord électoral</h1>
+          <h1 className="text-xl" style={{ fontWeight: 800, color: "#111827", margin: 0 }}>📈 Analyse électorale</h1>
           <p className="text-xs" style={{ color: "#6b7280", marginTop: 6 }}>Comparaison 1er Tour vs 2éme Tour — indicateurs clés, classement & résultats par bureau</p>
         </div>
 
