@@ -18,9 +18,9 @@ export default function Sidebar() {
   const [role, setRole] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
   const [openGroups, setOpenGroups] = useState<any>({
-    0: true,
-    1: true,
-    2: true,
+    0: false,
+    1: false,
+    2: false,
   })
 
   function toggleGroup(index: number) {
@@ -154,7 +154,7 @@ export default function Sidebar() {
                   {/* Header du groupe */}
                   <button
                     onClick={() => toggleGroup(index)}
-                    className="cursor-pointer p-1 w-full text-left text-sm font-bold text-yellow-300 bg-blue-800 hover:bg-blue-700 rounded flex justify-between items-center"
+                    className="cursor-pointer p-1 px-2 w-full text-left text-sm font-bold text-bleu-300 hover:bg-blue-700 rounded flex justify-between items-center"
                   >
                     <span>{group.label}</span>
                     <span className="text-xs">
