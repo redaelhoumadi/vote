@@ -14,6 +14,9 @@ Tooltip,
 ResponsiveContainer,
 } from "recharts"
 
+
+import ExportAnalyseButton from "@/components/ExportAnalyseButton"
+
 export default function DashboardPage(){
 
 const [candidates,setCandidates] = useState<any[]>([])

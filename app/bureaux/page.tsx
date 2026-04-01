@@ -2,6 +2,7 @@
 
 import Sidebar from "@/components/Sidebar"
 import BureauCards from "@/components/BureauCards"
+import ExportButton from "@/components/ExportButton"   // ← AJOUT
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 
@@ -134,66 +135,74 @@ export default function BureauxPage() {
             Consultez et filtrez les résultats détaillés par bureau de vote
           </p>
         </div>
+
         <div className="flex flex-col xl:flex-row justify-between">
-        {/* ── SWITCH TOUR ── */}
-        <div className="flex gap-1 mb-8 bg-white rounded-xl p-1 shadow-sm w-fit">
-          {[
-            { value: 1, label: "1er tour" },
-            { value: 2, label: "2ème tour" },
-          ].map(t => (
-            <button
-              key={t.value}
-              onClick={() => setRound(t.value)}
-              className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 border-none cursor-pointer ${
-                round === t.value
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "bg-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
 
-        {/* ── FILTRES & TRI ── */}
-        <div className="flex flex-wrap gap-3 mb-6 items-center">
-
-          {/* Tri */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Trier par</span>
-            <select
-              value={sort}
-              onChange={e => setSort(e.target.value)}
-              className="text-sm font-medium bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm text-gray-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {SORT_OPTIONS.map(o => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
+          {/* ── SWITCH TOUR ── */}
+          <div className="flex gap-1 mb-8 bg-white rounded-xl p-1 shadow-sm w-fit">
+            {[
+              { value: 1, label: "1er tour" },
+              { value: 2, label: "2ème tour" },
+            ].map(t => (
+              <button
+                key={t.value}
+                onClick={() => setRound(t.value)}
+                className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 border-none cursor-pointer ${
+                  round === t.value
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "bg-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
 
-          {/* Filtre gagnant */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Gagnant</span>
-            <select
-              value={winnerFilter}
-              onChange={e => setWinnerFilter(e.target.value)}
-              className="text-sm font-medium bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm text-gray-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">Tous</option>
-              {winnersList.map((w: any) => (
-                <option key={w} value={w}>{w}</option>
-              ))}
-            </select>
+          {/* ── FILTRES, TRI & EXPORT ── */}
+          <div className="flex flex-wrap gap-3 mb-6 items-center">
+
+            {/* Tri */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Trier par</span>
+              <select
+                value={sort}
+                onChange={e => setSort(e.target.value)}
+                className="text-sm font-medium bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm text-gray-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {SORT_OPTIONS.map(o => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Filtre gagnant */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Gagnant</span>
+              <select
+                value={winnerFilter}
+                onChange={e => setWinnerFilter(e.target.value)}
+                className="text-sm font-medium bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm text-gray-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">Tous</option>
+                {winnersList.map((w: any) => (
+                  <option key={w} value={w}>{w}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Compteur */}
+            <span className="text-sm text-gray-400 font-medium">
+              {sortedBureaux.length} bureau{sortedBureaux.length > 1 ? "x" : ""}
+            </span>
+
+            {/* ── BOUTON EXPORT ── */}  {/* ← AJOUT */}
+            {!loading && sortedBureaux.length > 0 && (
+              <ExportButton bureaux={sortedBureaux} round={round} />
+            )}
+
           </div>
-
-          {/* Compteur */}
-          <span className="ml-auto text-sm text-gray-400 font-medium">
-            {sortedBureaux.length} bureau{sortedBureaux.length > 1 ? "x" : ""}
-          </span>
-
         </div>
-        </div>
+
         {/* ── CONTENU ── */}
         {loading ? (
           <div className="flex items-center justify-center py-24">

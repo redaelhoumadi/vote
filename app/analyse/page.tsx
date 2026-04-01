@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar"
 import { supabase } from "@/lib/supabase"
 import Image from "next/image"
 import banier from "@/public/banniere.jpg"
+import ExportAnalyseButton from "@/components/ExportAnalyseButton"
 
 /* ═══════════════════════════════════════════
    TYPES
@@ -601,6 +602,7 @@ export default function DashboardPage() {
               <div style={{ display: "flex", gap: 16, fontSize: 12 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 14, height: 4, borderRadius: 99, background: "#94a3b8" }} /><span style={{ color: "#6b7280" }}>1er Tour</span></div>
                 <div style={{ display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 14, height: 4, borderRadius: 99, background: "#2563eb" }} /><span style={{ color: "#6b7280" }}>2éme Tour</span></div>
+                <ExportAnalyseButton bureaux={filteredBureaux} />
               </div>
             </div>
 
